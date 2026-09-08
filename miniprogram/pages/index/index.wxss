@@ -1,0 +1,215 @@
+/* 统计卡片 */
+.summary-card {
+  background: linear-gradient(135deg, #07c160, #0a9e4f);
+  margin: 20rpx;
+  padding: 30rpx;
+  border-radius: 24rpx;
+  color: white;
+}
+
+.summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.summary-title {
+  font-size: 28rpx;
+  opacity: 0.9;
+}
+
+.reminder-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 6rpx 20rpx;
+  border-radius: 30rpx;
+}
+
+.reminder-text {
+  font-size: 24rpx;
+}
+
+.summary-stats {
+  display: flex;
+  justify-content: space-between;
+}
+
+.stat-item {
+  text-align: center;
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  opacity: 0.8;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.stat-value {
+  font-size: 40rpx;
+  font-weight: bold;
+  display: block;
+}
+
+.stat-value.paid {
+  color: #fff;
+}
+
+.stat-value.pending {
+  color: #ffe082;
+}
+
+/* 房产列表 */
+.section-header {
+  margin: 20rpx 20rpx 10rpx;
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+}
+
+.property-list {
+  padding: 0 20rpx;
+}
+
+.property-item {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.03);
+}
+
+.property-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.property-address {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.property-rent {
+  font-size: 28rpx;
+  color: #07c160;
+  font-weight: 500;
+  margin-bottom: 6rpx;
+}
+
+.property-lease {
+  font-size: 22rpx;
+  color: #999;
+  margin-bottom: 4rpx;
+}
+
+.property-tenant {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.property-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12rpx;
+}
+
+.status-light {
+  padding: 8rpx 20rpx;
+  border-radius: 30rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  min-width: 100rpx;
+  text-align: center;
+}
+
+.status-light.paid {
+  background: #e8f5e9;
+  color: #07c160;
+}
+
+.status-light.pending {
+  background: #ffebee;
+  color: #ff4d4f;
+}
+
+.collect-btn {
+  background: #07c160;
+  color: white;
+  font-size: 26rpx;
+  font-weight: 500;
+  height: 64rpx;
+  width: 20rpx; 
+  border-radius: 32rpx;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.collect-btn::after {
+  border: none;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 80rpx 0;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  opacity: 0.3;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 添加按钮 */
+/* 右下角悬浮加号按钮 */
+.add-fab {
+  position: fixed;
+  right: 30rpx;
+  bottom: 130rpx;           /* TabBar 高度约 100rpx，再加 30rpx 间距 */
+  width: 100rpx;
+  height: 100rpx;
+  background: #07c160;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 20rpx rgba(7, 193, 96, 0.35);
+  z-index: 100;
+  transition: all 0.2s ease;
+}
+
+.add-fab:active {
+  transform: scale(0.94);
+  background: #06ad56;
+}
+
+.add-icon {
+  font-size: 52rpx;
+  font-weight: 300;
+  color: white;
+  line-height: 1;
+  margin-top: -4rpx;   /* 微调垂直居中 */
+}
+
+.add-btn::after {
+  border: none;
+}

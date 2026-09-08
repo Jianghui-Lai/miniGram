@@ -1,0 +1,117 @@
+/* pages/all-properties/all-properties.wxss */.container {
+  min-height: 100vh;
+  padding: 20rpx;
+}
+
+.group {
+  margin-bottom: 40rpx;
+}
+
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0 10rpx 20rpx;
+}
+
+.group-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.group-count {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.property-item {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.03);
+}
+
+.property-info {
+  flex: 1;
+}
+
+.address {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.rent {
+  font-size: 28rpx;
+  color: #07c160;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 6rpx;
+}
+
+.tenant {
+  font-size: 24rpx;
+  color: #666;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.lease {
+  font-size: 22rpx;
+  color: #999;
+  display: block;
+}
+
+.remark {
+  font-size: 22rpx;
+  color: #ff9800;
+  display: block;
+}
+
+.status-badge {
+  padding: 8rpx 20rpx;
+  border-radius: 30rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  min-width: 100rpx;
+  text-align: center;
+}
+
+.status-badge.renting {
+  background: #e8f5e9;
+  color: #07c160;
+}
+
+.status-badge.upcoming {
+  background: #fff3e0;
+  color: #ff9800;
+}
+
+.status-badge.unrented {
+  background: #f5f5f5;
+  color: #999;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 100rpx 0;
+}
+
+.empty-icon {
+  font-size: 100rpx;
+  opacity: 0.3;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+}

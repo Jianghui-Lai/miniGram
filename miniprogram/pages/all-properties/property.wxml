@@ -1,0 +1,133 @@
+<view class="container">
+  <!-- 房产信息卡片 -->
+  <view class="property-card">
+    <!-- 地址和状态 -->
+    <view class="property-header">
+      <text class="address">{{property.address}}</text>
+      <view class="status-badge 
+        {{property.leaseStatus}}">
+        {{!property.tenant ? '空置' : 
+          property.isPaid ? '已交租' : '未交租'}}
+      </view>
+    </view>
+
+    <!-- 租期信息卡片 - 始终显示 -->
+    <view class="lease-section">
+      <view class="section-title">
+        <text class="title-icon">📅</text>
+        <text class="title-text">租期信息</text>
+      </view>
+      
+      <view class="lease-content">
+        <!-- 有租期信息时显示具体日期 -->
+        <view wx:if="{{property.leaseStart && property.leaseEnd}}" class="lease-dates">
+          <view class="date-row">
+            <text class="date-label">开始日期：</text>
+            <text class="date-value">{{property.leaseStart}}</text>
+          </view>
+          <view class="date-row">
+            <text class="date-label">结束日期：</text>
+            <text class="date-value">{{property.leaseEnd}}</text>
+          </view>
+          
+          <!-- 租期状态说明 -->
+          <view class="lease-status {{leaseStatusClass}}">
+            <text class="status-text">{{leaseStatusText}}</text>
+            <text class="days-text" wx:if="{{remainingDays > 0}}">剩余 {{remainingDays}} 天</text>
+          </view>
+        </view>
+        
+        <!-- 无租期信息时 -->
+        <view wx:else class="no-lease">
+          <text class="no-lease-text">暂无租期信息</text>
+          <button class="set-lease-btn" bindtap="editLease">设置租期</button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 租金信息 - 始终显示 -->
+    <view class="rent-section">
+      <view class="section-title">
+        <text class="title-icon">💰</text>
+        <text class="title-text">租金信息</text>
+      </view>
+      <view class="rent-content">
+        <text class="rent-label">月租金：</text>
+        <text class="rent-value">{{property.monthlyRent}}元</text>
+      </view>
+    </view>
+
+    <!-- 租客信息 - 只有非空置时显示 -->
+    <view class="tenant-section" wx:if="{{property.tenant}}">
+      <view class="section-title">
+        <text class="title-icon">👤</text>
+        <text class="title-text">租客信息</text>
+      </view>
+      <view class="tenant-content">
+        <view class="info-row">
+          <text class="info-label">姓名：</text>
+          <text class="info-value">{{property.tenant}}</text>
+        </view>
+        <view class="info-row" wx:if="{{property.tenantPhone}}">
+          <text class="info-label">电话：</text>
+          <text class="info-value">{{property.tenantPhone}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 本月交租 - 只有非空置时显示 -->
+    <view class="payment-section" wx:if="{{property.tenant}}">
+      <view class="section-title">
+        <text class="title-icon">💳</text>
+        <text class="title-text">本月交租</text>
+      </view>
+      
+      <view class="payment-content">
+        <view class="status-row">
+          <text class="status-label">当前状态：</text>
+          <view class="status-badge-small {{property.isPaid ? 'paid' : 'pending'}}">
+            {{property.isPaid ? '已交租' : '未交租'}}
+          </view>
+        </view>
+        
+        <!-- 交租按钮 - 只有未交租时显示 -->
+        <button class="collect-btn" 
+                wx:if="{{!property.isPaid}}"
+                bindtap="collectRent">
+          确认收到租金
+        </button>
+        
+        <!-- 已交租提示（无照片） -->
+        <view class="paid-info" wx:if="{{property.isPaid && property.paidDate}}">
+          <text class="paid-date">✓ 已于 {{property.paidDate}} 交租</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空置提示 - 只有空置时显示 -->
+    <view class="vacant-section" wx:else>
+      <view class="vacant-icon">🏠</view>
+      <text class="vacant-text">当前房产空置</text>
+      <button class="add-tenant-btn" bindtap="addTenant">添加租客</button>
+    </view>
+
+    <!-- 历史交租记录 - 只有非空置时显示 -->
+    <view class="history-section" wx:if="{{property.tenant && paymentHistory.length > 0}}">
+      <view class="section-title">
+        <text class="title-icon">📋</text>
+        <text class="title-text">历史交租记录</text>
+      </view>
+      
+      <view class="history-list">
+        <view class="history-item" 
+              wx:for="{{paymentHistory}}" 
+              wx:key="index">
+          <text class="history-month">{{item.month}}</text>
+          <view class="history-status {{item.isPaid ? 'paid' : 'pending'}}">
+            {{item.isPaid ? '已交' : '未交'}}
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,53 @@
+<view class="container">
+  <view class="form-card">
+    <view class="form-item">
+      <text class="label required">房产地址</text>
+      <input class="input" placeholder="例：阳光小区3号楼101室" 
+       bindinput="onAddressInput" value="{{address}}"/>
+      <text class="error" wx:if="{{errors.address}}">{{errors.address}}</text>
+    </view>
+
+    <view class="form-item">
+      <text class="label required">月租金（元）</text>
+      <input class="input" type="digit" placeholder="例：3000" bindinput="onRentInput" value="{{monthlyRent}}"/>
+      <text class="error" wx:if="{{errors.monthlyRent}}">{{errors.monthlyRent}}</text>
+    </view>
+
+    <view class="form-item">
+      <text class="label">租客姓名</text>
+      <input class="input" placeholder="选填" bindinput="onTenantNameInput" value="{{tenantName}}"/>
+    </view>
+
+    <view class="form-item">
+      <text class="label">联系电话</text>
+      <input class="input" type="number" placeholder="选填" bindinput="onTenantPhoneInput" value="{{tenantPhone}}"/>
+      <text class="error" wx:if="{{errors.tenantPhone}}">{{errors.tenantPhone}}</text>
+    </view>
+
+    <view class="form-row">
+      <view class="form-item half">
+        <text class="label">租期开始</text>
+        <picker mode="date" value="{{leaseStart}}" bindchange="onLeaseStartChange">
+          <view class="picker">{{leaseStart || '请选择'}}</view>
+        </picker>
+      </view>
+      <view class="form-item half">
+        <text class="label">租期结束</text>
+        <picker mode="date" value="{{leaseEnd}}" bindchange="onLeaseEndChange">
+          <view class="picker">{{leaseEnd || '请选择'}}</view>
+        </picker>
+      </view>
+    </view>
+    <text class="error" wx:if="{{errors.leaseDates}}">{{errors.leaseDates}}</text>
+
+    <view class="form-item">
+      <text class="label">备注</text>
+      <textarea class="textarea" placeholder="选填（押金、缴费方式等）" bindinput="onRemarkInput" value="{{remark}}"/>
+    </view>
+  </view>
+
+  <view class="action-buttons">
+    <button class="cancel-btn" bindtap="goBack">取消</button>
+    <button class="save-btn {{canSubmit ? '' : 'disabled'}}" bindtap="saveProperty" disabled="{{!canSubmit}}">保存房产</button>
+  </view>
+</view>

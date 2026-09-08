@@ -1,0 +1,74 @@
+<view class="container">
+  <!-- 出租中 -->
+  <view class="group" wx:if="{{rentingList.length > 0}}">
+    <view class="group-header">
+      <text class="group-title">🏠 出租中</text>
+      <text class="group-count">{{rentingList.length}}套</text>
+    </view>
+    
+    <view class="property-item" 
+          wx:for="{{rentingList}}" 
+          wx:key="id"
+          bindtap="goToPropertyDetail" 
+          data-id="{{item.id}}">
+      <view class="property-info">
+        <text class="address">{{item.address}}</text>
+        <text class="rent">{{item.monthlyRent}}元/月</text>
+        <text class="tenant" wx:if="{{item.tenantName}}">租客：{{item.tenantName}}</text>
+        <text class="lease">📅 {{item.leaseStart}} 至 {{item.leaseEnd}}</text>
+      </view>
+      <text class="status-badge renting">出租中</text>
+    </view>
+  </view>
+
+  <!-- 即将出租 -->
+  <view class="group" wx:if="{{upcomingList.length > 0}}">
+    <view class="group-header">
+      <text class="group-title">⏰ 即将出租</text>
+      <text class="group-count">{{upcomingList.length}}套</text>
+    </view>
+    
+    <view class="property-item" 
+          wx:for="{{upcomingList}}" 
+          wx:key="id"
+          bindtap="goToPropertyDetail" 
+          data-id="{{item.id}}">
+      <view class="property-info">
+        <text class="address">{{item.address}}</text>
+        <text class="rent">{{item.monthlyRent}}元/月</text>
+        <text class="tenant" wx:if="{{item.tenantName}}">租客：{{item.tenantName}}</text>
+        <text class="lease">📅 {{item.leaseStart}} 至 {{item.leaseEnd}}</text>
+      </view>
+      <text class="status-badge upcoming">即将出租</text>
+    </view>
+  </view>
+
+  <!-- 未租 -->
+  <view class="group" wx:if="{{unrentedList.length > 0}}">
+    <view class="group-header">
+      <text class="group-title">🏚️ 未租</text>
+      <text class="group-count">{{unrentedList.length}}套</text>
+    </view>
+    
+    <view class="property-item" 
+          wx:for="{{unrentedList}}" 
+          wx:key="id"
+          bindtap="goToPropertyDetail" 
+          data-id="{{item.id}}">
+      <view class="property-info">
+        <text class="address">{{item.address}}</text>
+        <text class="rent">{{item.monthlyRent}}元/月</text>
+        <text class="tenant" wx:if="{{item.tenantName}}">租客：{{item.tenantName}}</text>
+        <text class="lease" wx:if="{{item.leaseStart}}">📅 {{item.leaseStart}} 至 {{item.leaseEnd}}</text>
+        <text class="remark" wx:else>未设置租期</text>
+      </view>
+      <text class="status-badge unrented">未租</text>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{rentingList.length === 0 && upcomingList.length === 0 && unrentedList.length === 0}}">
+    <text class="empty-icon">🏠</text>
+    <text class="empty-text">暂无房产，点击首页添加</text>
+  </view>
+</view>

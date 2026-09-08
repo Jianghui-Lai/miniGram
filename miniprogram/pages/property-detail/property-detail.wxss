@@ -1,0 +1,372 @@
+.container {
+  padding: 20rpx;
+  padding-bottom: 120rpx;
+}
+
+/* 头部卡片 */
+.header-card {
+  background: linear-gradient(135deg, #07c160, #0a9e4f);
+  border-radius: 24rpx;
+  padding: 30rpx;
+  color: white;
+  margin-bottom: 20rpx;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.address {
+  font-size: 36rpx;
+  font-weight: 600;
+}
+
+.status-badge {
+  padding: 8rpx 20rpx;
+  border-radius: 30rpx;
+  font-size: 24rpx;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.status-badge.renting {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.rent-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.rent-label {
+  font-size: 26rpx;
+  opacity: 0.8;
+}
+
+.rent-value {
+  font-size: 40rpx;
+  font-weight: bold;
+}
+
+.total-received {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 20rpx;
+  border-top: 2rpx solid rgba(255, 255, 255, 0.2);
+}
+
+.received-label {
+  font-size: 24rpx;
+  opacity: 0.8;
+}
+
+.received-value {
+  font-size: 28rpx;
+  font-weight: bold;
+}
+
+/* 信息卡片 */
+.info-card {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.03);
+}
+
+.card-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.lease-dates {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.tenant-info {
+  font-size: 28rpx;
+  color: #666;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.remark-content {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* 日历卡片 */
+.calendar-card {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.year-nav {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.nav-btn {
+  font-size: 32rpx;
+  color: #07c160;
+  padding: 10rpx;
+}
+
+.year {
+  font-size: 28rpx;
+  font-weight: 500;
+  min-width: 100rpx;
+  text-align: center;
+}
+
+.calendar-tip {
+  font-size: 22rpx;
+  color: #999;
+}
+
+/* 月份点阵 */
+.months-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.month-dot {
+  width: 60rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.month-num {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+}
+
+.dot.paid {
+  background: #07c160;
+}
+
+.dot.unpaid {
+  background: #e0e0e0;
+}
+
+.calendar-stats {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 20rpx;
+  border-top: 2rpx solid #f0f0f0;
+}
+
+.stat {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 操作按钮 */
+.action-card {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+}
+
+.collect-btn {
+  background: #07c160;
+  color: white;
+  border-radius: 50rpx;
+  height: 88rpx;
+  font-size: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  margin: 0;
+}
+
+.collect-btn::after {
+  border: none;
+}
+
+.paid-tip {
+  text-align: center;
+  padding: 30rpx;
+  background: #e8f5e9;
+  border-radius: 16rpx;
+  color: #07c160;
+  font-size: 28rpx;
+}
+
+/* 操作按钮区域 */
+.action-buttons {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 20rpx;
+  margin-bottom: 30rpx;
+}
+
+.edit-btn, .delete-btn {
+  flex: 1;
+  height: 80rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  margin: 0;
+}
+
+.edit-btn {
+  background: #d4d3d331;
+  color: #333;
+}
+
+.delete-btn {
+  background: #ffebee;
+  color: #ff4d4f;
+}
+
+.edit-btn::after, .delete-btn::after {
+  border: none;
+}
+
+/* 弹窗样式 */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.modal-content {
+  background: white;
+  width: 100%;
+  max-height: 80vh;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 40rpx 30rpx;
+  overflow-y: auto;
+}
+
+.modal-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 30rpx;
+}
+
+.form-item {
+  margin-bottom: 24rpx;
+}
+
+.form-row {
+  display: flex;
+  gap: 20rpx;
+}
+
+.form-item.half {
+  flex: 1;
+}
+
+.label {
+  font-size: 28rpx;
+  color: #666;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+/* 修复弹窗输入框 - 增加高度确保文字完整显示 */
+.modal-content .input,
+.modal-content .picker {
+  width: 100%;
+  background: #f8f8f8;
+  border-radius: 12rpx;
+  padding: 24rpx 20rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+  height: 88rpx;
+  line-height: 1.4;
+  display: block;
+}
+
+.modal-content .picker {
+  display: flex;
+  align-items: center;
+}
+
+.modal-content .textarea {
+  width: 100%;
+  background: #f8f8f8;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+  min-height: 160rpx;
+  line-height: 1.5;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 40rpx;
+}
+
+.modal-buttons button {
+  flex: 1;
+  height: 80rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  margin: 0;
+}
+
+.modal-buttons .cancel {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.modal-buttons .confirm {
+  background: #07c160;
+  color: white;
+}
+
+.modal-buttons button::after {
+  border: none;
+}

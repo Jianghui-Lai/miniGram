@@ -1,0 +1,135 @@
+<view class="container" wx:if="{{property}}">
+  <!-- 头部信息 -->
+  <view class="header-card">
+    <view class="header-top">
+      <text class="address">{{property.address}}</text>
+      <view class="status-badge {{status}}">{{statusText}}</view>
+    </view>
+    
+    <view class="rent-info">
+      <text class="rent-label">月租金</text>
+      <text class="rent-value">{{property.monthlyRent}}元</text>
+    </view>
+    
+    <view class="total-received">
+      <text class="received-label">累计已收租金</text>
+      <text class="received-value">{{property.totalReceivedRent || 0}}元</text>
+    </view>
+  </view>
+
+  <!-- 租期信息 -->
+  <view class="info-card" wx:if="{{property.leaseStart}}">
+    <view class="card-title">📅 租期信息</view>
+    <view class="lease-dates">
+      <text>{{property.leaseStart}} 至 {{property.leaseEnd}}</text>
+    </view>
+  </view>
+
+  <!-- 租客信息 -->
+  <view class="info-card" wx:if="{{property.tenantName}}">
+    <view class="card-title">👤 租客信息</view>
+    <view class="tenant-info">
+      <text>姓名：{{property.tenantName}}</text>
+      <text wx:if="{{property.tenantPhone}}">电话：{{property.tenantPhone}}</text>
+    </view>
+  </view>
+
+  <!-- 备注信息 -->
+  <view class="info-card" wx:if="{{property.remark}}">
+    <view class="card-title">📝 备注</view>
+    <view class="remark-content">{{property.remark}}</view>
+  </view>
+
+  <!-- 迷你年历（交租记录） -->
+  <view class="calendar-card">
+    <view class="calendar-header">
+      <view class="year-nav">
+        <text class="nav-btn" bindtap="prevYear">◀</text>
+        <text class="year">{{currentYear}}年</text>
+        <text class="nav-btn" bindtap="nextYear">▶</text>
+      </view>
+      <text class="calendar-tip">● 已交租  ○ 未交租</text>
+    </view>
+    
+    <view class="months-grid">
+      <view class="month-dot" wx:for="{{monthsData}}" wx:key="month">
+        <text class="month-num">{{item.month}}</text>
+        <view class="dot {{item.isPaid ? 'paid' : 'unpaid'}}"></view>
+      </view>
+    </view>
+    
+    <view class="calendar-stats">
+      <!-- 修复：使用 JS 中计算好的变量，不使用箭头函数 -->
+      <text class="stat">已交租: {{paidMonthsCount}}个月</text>
+      <text class="stat">未交租: {{unpaidMonthsCount}}个月</text>
+    </view>
+  </view>
+
+  <!-- 交租按钮 -->
+  <view class="action-card" wx:if="{{isRenting}}">
+    <button class="collect-btn" wx:if="{{!property.isPaid}}" bindtap="collectRent">
+      确认收到本月租金
+    </button>
+    <view class="paid-tip" wx:else>
+      ✓ 本月租金已收
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-buttons">
+    <button class="edit-btn" bindtap="showEditModal">编辑信息</button>
+    <button class="delete-btn" bindtap="deleteProperty">删除房产</button>
+  </view>
+</view>
+
+<!-- 编辑弹窗 -->
+<view class="modal-mask" wx:if="{{showEditModal}}" bindtap="hideEditModal">
+  <view class="modal-content" catchtap="preventClose">
+    <view class="modal-title">编辑房产</view>
+    
+    <view class="form-item">
+      <text class="label">地址 *</text>
+      <input class="input" placeholder="请输入地址" value="{{editForm.address}}" bindinput="onEditInput" data-field="address"/>
+    </view>
+    
+    <view class="form-item">
+      <text class="label">月租金 *</text>
+      <input class="input" type="digit" placeholder="请输入月租金" value="{{editForm.monthlyRent}}" bindinput="onEditInput" data-field="monthlyRent"/>
+    </view>
+    
+    <view class="form-item">
+      <text class="label">租客姓名</text>
+      <input class="input" placeholder="选填" value="{{editForm.tenantName}}" bindinput="onEditInput" data-field="tenantName"/>
+    </view>
+    
+    <view class="form-item">
+      <text class="label">联系电话</text>
+      <input class="input" type="number" placeholder="选填" value="{{editForm.tenantPhone}}" bindinput="onEditInput" data-field="tenantPhone"/>
+    </view>
+    
+    <view class="form-row">
+      <view class="form-item half">
+        <text class="label">租期开始</text>
+        <picker mode="date" value="{{editForm.leaseStart}}" bindchange="onEditInput" data-field="leaseStart">
+          <view class="picker">{{editForm.leaseStart || '请选择'}}</view>
+        </picker>
+      </view>
+      <view class="form-item half">
+        <text class="label">租期结束</text>
+        <picker mode="date" value="{{editForm.leaseEnd}}" bindchange="onEditInput" data-field="leaseEnd">
+          <view class="picker">{{editForm.leaseEnd || '请选择'}}</view>
+        </picker>
+      </view>
+    </view>
+    
+    <view class="form-item">
+      <text class="label">备注</text>
+      <textarea class="textarea" placeholder="选填" value="{{editForm.remark}}" bindinput="onEditInput" data-field="remark"/>
+    </view>
+    
+    <view class="modal-buttons">
+      <button class="cancel" bindtap="hideEditModal">取消</button>
+      <button class="confirm" bindtap="saveEdit">保存</button>
+    </view>
+  </view>
+</view>
