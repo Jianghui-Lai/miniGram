@@ -76,6 +76,7 @@ function getRentForMonth(property, year, month) {
 
 /**
  * 获取房产的月度交租状态（用于年历）
+ * 注意：此函数保留用于兼容，建议逐步迁移到 getAllDueMonths
  */
 function getMonthlyPaymentStatus(property, year) {
   const months = []
@@ -132,13 +133,147 @@ function shouldRemind(property, currentYear, currentMonth) {
   return today >= reminderDate
 }
 
+// ================================================================
+// 核心函数：实时计算租金状态（不依赖存储完整性）
+// ================================================================
+
+/**
+ * 获取某个月份的租金状态（实时计算）
+ * @param {Object} property - 房产对象
+ * @param {number} year - 年份
+ * @param {number} month - 月份 (1-12)
+ * @returns {string} 'paid' | 'overdue' | 'unpaid' | 'not_active'
+ */
+function getMonthStatus(property, year, month) {
+  // 先检查该月是否在租期内
+  if (!isActiveInMonth(property, year, month)) {
+    return 'not_active'
+  }
+  
+  // 查找已收记录
+  const paidRecord = (property.paymentHistory || []).find(
+    p => p.year === year && p.month === month && p.status === 'paid'
+  )
+  
+  if (paidRecord) {
+    return 'paid'
+  }
+  
+  // 未支付：判断是否逾期（当前月份 > 该月）
+  const today = new Date()
+  const currentYear = today.getFullYear()
+  const currentMonth = today.getMonth() + 1
+  
+  if (year < currentYear || (year === currentYear && month < currentMonth)) {
+    return 'overdue'
+  }
+  
+  return 'unpaid'
+}
+
+/**
+ * 获取房产的月度状态详情（实时计算）
+ * @param {Object} property - 房产对象
+ * @param {number} year - 年份
+ * @param {number} month - 月份 (1-12)
+ * @returns {Object} { status, text, color, payment }
+ */
+function getMonthStatusDetail(property, year, month) {
+  const status = getMonthStatus(property, year, month)
+  const paidRecord = (property.paymentHistory || []).find(
+    p => p.year === year && p.month === month && p.status === 'paid'
+  )
+  
+  const statusMap = {
+    'paid': { text: '已收租', color: 'green' },
+    'overdue': { text: '欠租', color: 'red' },
+    'unpaid': { text: '待收租', color: 'gray' },
+    'not_active': { text: '未出租', color: 'gray' }
+  }
+  
+  return {
+    status,
+    ...statusMap[status],
+    payment: paidRecord || null
+  }
+}
+
+/**
+ * 获取租期内所有应缴月份列表（实时计算）
+ * @param {Object} property - 房产对象
+ * @returns {Array} 月份数组 [{ year, month, status, amount, date }]
+ */
+function getAllDueMonths(property) {
+  const result = []
+  
+  if (!property.leaseStart || !property.leaseStart.trim() || 
+      !property.leaseEnd || !property.leaseEnd.trim()) {
+    return result
+  }
+  
+  const start = new Date(property.leaseStart)
+  const end = new Date(property.leaseEnd)
+  const monthlyRent = property.monthlyRent || 0
+  
+  // 构建已收记录的快速查找表
+  const paidMap = {}
+  ;(property.paymentHistory || []).forEach(p => {
+    if (p.status === 'paid') {
+      paidMap[`${p.year}-${p.month}`] = p
+    }
+  })
+  
+  // 遍历租期每个月
+  let year = start.getFullYear()
+  let month = start.getMonth() + 1
+  const endYear = end.getFullYear()
+  const endMonth = end.getMonth() + 1
+  
+  while (year < endYear || (year === endYear && month <= endMonth)) {
+    const key = `${year}-${month}`
+    const paidRecord = paidMap[key]
+    
+    result.push({
+      year,
+      month,
+      amount: paidRecord?.amount || monthlyRent,
+      status: paidRecord ? 'paid' : 'unpaid',
+      date: paidRecord?.date || null
+    })
+    
+    month++
+    if (month > 12) {
+      month = 1
+      year++
+    }
+  }
+  
+  return result
+}
+
+// ================================================================
+// 导出
+// ================================================================
+
 module.exports = {
+  // 常量
   STATUS,
   STATUS_TEXT,
+  
+  // 租期判断
   getPropertyStatus,
   isActiveInMonth,
   getRentForMonth,
-  getMonthlyPaymentStatus,
+  
+  // 提醒
   getReminderDate,
-  shouldRemind
+  shouldRemind,
+  
+  // 兼容旧代码（建议逐步迁移到 getAllDueMonths）
+  getMonthlyPaymentStatus,
+  
+  // 核心实时计算函数
+  getMonthStatus,
+  getMonthStatusDetail,
+  getAllDueMonths
 }

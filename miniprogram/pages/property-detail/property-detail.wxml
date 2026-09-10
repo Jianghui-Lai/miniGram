@@ -48,32 +48,40 @@
         <text class="year">{{currentYear}}年</text>
         <text class="nav-btn" bindtap="nextYear">▶</text>
       </view>
-      <text class="calendar-tip">● 已交租  ○ 未交租</text>
+      <text class="calendar-tip">● 待交租</text>
     </view>
     
     <view class="months-grid">
-      <view class="month-dot" wx:for="{{monthsData}}" wx:key="month">
-        <text class="month-num">{{item.month}}</text>
-        <view class="dot {{item.isPaid ? 'paid' : 'unpaid'}}"></view>
-      </view>
+    <view class="month-dot" 
+          wx:for="{{monthsData}}" 
+          wx:key="month"
+          bindtap="onMonthTap"
+          data-month="{{item.month}}"
+          data-status="{{item.status}}"
+          data-amount="{{item.amount}}">
+      <text class="month-num">{{item.month}}</text>
+      <view class="dot {{item.status}}"></view>
     </view>
+  </view>
     
-    <view class="calendar-stats">
-      <!-- 修复：使用 JS 中计算好的变量，不使用箭头函数 -->
-      <text class="stat">已交租: {{paidMonthsCount}}个月</text>
-      <text class="stat">未交租: {{unpaidMonthsCount}}个月</text>
-    </view>
+  <view class="calendar-stats">
+    <text class="stat">✅ 已交租: {{paidMonthsCount}}个月</text>
+    <text class="stat" wx:if="{{overdueMonthsCount > 0}}">🔴 欠租: {{overdueMonthsCount}}个月</text>
+    <text class="stat" wx:else>⚪ 待收租: {{pendingMonthsCount}}个月</text>
+</view>
   </view>
 
   <!-- 交租按钮 -->
-  <view class="action-card" wx:if="{{isRenting}}">
-    <button class="collect-btn" wx:if="{{!property.isPaid}}" bindtap="collectRent">
+<view class="action-card" wx:if="{{isRenting}}">
+  <block wx:if="{{property._status === 'paid'}}">
+    <button class="cancel-rent-btn" bindtap="cancelRent">撤销</button>
+  </block>
+  <block wx:else>
+    <button class="collect-btn" bindtap="collectRent">
       确认收到本月租金
     </button>
-    <view class="paid-tip" wx:else>
-      ✓ 本月租金已收
-    </view>
-  </view>
+  </block>
+</view>
 
   <!-- 操作按钮 -->
   <view class="action-buttons">

@@ -156,6 +156,13 @@
   flex-direction: column;
   align-items: center;
   gap: 8rpx;
+  padding: 10rpx 0;
+  border-radius: 12rpx;
+  transition: background 0.2s ease;
+}
+
+.month-dot:active {
+  background: #f5f5f5;
 }
 
 .month-num {
@@ -170,7 +177,11 @@
 }
 
 .dot.paid {
-  background: #07c160;
+  background: #02b759;
+}
+
+.dot.overdue {
+  background: #dc655ad4;  /* 欠租 → 红色 */
 }
 
 .dot.unpaid {
@@ -215,21 +226,38 @@
   border: none;
 }
 
-.paid-tip {
-  text-align: center;
-  padding: 30rpx;
-  background: #e8f5e9;
-  border-radius: 16rpx;
-  color: #07c160;
-  font-size: 28rpx;
-}
-
 /* 操作按钮区域 */
 .action-buttons {
   display: flex;
   gap: 20rpx;
   margin-top: 20rpx;
   margin-bottom: 30rpx;
+}
+
+.cancel-rent-btn {
+  height: 88rpx;
+  border-radius: 50rpx;
+  font-size: 32rpx;
+  font-weight: 500;
+  background: #f5f5f5;
+  color: #666;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  margin: 0;
+  transition: all 0.2s ease;
+}
+
+.cancel-rent-btn::after {
+  border: none;
+}
+
+.cancel-rent-btn:active {
+  background: #e8e8e8;
+  transform: scale(0.98);
 }
 
 .edit-btn, .delete-btn {

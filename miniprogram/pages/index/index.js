@@ -6,6 +6,7 @@ Page({
     totalRent: 0,
     paidRent: 0,
     pendingRent: 0,
+    overdueCount: 0,  
     pendingCount: 0,       // 待收租数量（红点）
     currentMonth: ''
   },
@@ -17,6 +18,7 @@ Page({
 
   onShow() {
     this.loadProperties()
+    this.debugPrintStatus() 
   },
 
   setCurrentMonth() {
@@ -33,45 +35,47 @@ Page({
       key: 'properties',
       success: (res) => {
         const allProperties = res.data || []
-        const currentYear = new Date().getFullYear()
-        const currentMonth = new Date().getMonth() + 1
-        
-        // 筛选出租中的房产
+        const currentDate = new Date()
+        const currentYear = currentDate.getFullYear()
+        const currentMonth = currentDate.getMonth() + 1
+  
         const rentingProperties = allProperties.filter(property => {
-          const status = leaseManager.getPropertyStatus(property)
-          return status === leaseManager.STATUS.RENTING
+          return leaseManager.getPropertyStatus(property) === leaseManager.STATUS.RENTING
         })
-        
-        // 计算租金统计
+  
         let totalRent = 0
         let paidRent = 0
         let pendingCount = 0
-        
+        let overdueCount = 0
+  
         rentingProperties.forEach(property => {
           const monthlyRent = property.monthlyRent || 0
           totalRent += monthlyRent
-          
-          // 检查当月是否已交租
-          const payment = property.paymentHistory?.find(p => 
-            p.year === currentYear && p.month === currentMonth
-          )
-          const isPaid = payment?.status === 'paid'
-          
-          if (isPaid) {
+  
+          // ===== 使用新函数：实时计算本月状态 =====
+          const detail = leaseManager.getMonthStatusDetail(property, currentYear, currentMonth)
+  
+          property._status = detail.status
+          property._statusText = detail.text
+          property._statusColor = detail.color
+  
+          if (detail.status === 'paid') {
             paidRent += monthlyRent
-          } else {
+          } else if (detail.status === 'overdue') {
+            overdueCount++
+            pendingCount++
+          } else if (detail.status === 'unpaid') {
             pendingCount++
           }
-          
-          property.isPaid = isPaid
         })
-        
+  
         this.setData({
           properties: rentingProperties,
           totalRent,
           paidRent,
           pendingRent: totalRent - paidRent,
-          pendingCount
+          pendingCount,
+          overdueCount
         })
       },
       fail: () => {
@@ -166,5 +170,46 @@ Page({
     wx.navigateTo({
       url: `/pages/property-detail/property-detail?id=${id}`
     })
-  }
+  },
+
+  // 调试方法：打印所有月份状态
+// 调试方法：打印所有月份状态（使用新的实时计算）
+debugPrintStatus() {
+  wx.getStorage({
+    key: 'properties',
+    success: (res) => {
+      const allProperties = res.data || []
+      const currentDate = new Date()
+      const currentYear = currentDate.getFullYear()
+      const currentMonth = currentDate.getMonth() + 1
+      
+      console.log('===== 调试：租期内所有月份状态（实时计算） =====')
+      allProperties.forEach(property => {
+        console.log(`🏠 房产: ${property.address}`)
+        console.log(`租期: ${property.leaseStart} 至 ${property.leaseEnd}`)
+        
+        // ===== 使用 getAllDueMonths 获取租期内所有月份 =====
+        const allMonths = leaseManager.getAllDueMonths(property)
+        
+        if (allMonths.length === 0) {
+          console.log('  ⚠️ 无有效租期或租期内无月份')
+        } else {
+          allMonths.forEach(item => {
+            // 使用 getMonthStatusDetail 获取每个月的状态
+            const detail = leaseManager.getMonthStatusDetail(property, item.year, item.month)
+            const statusEmoji = detail.status === 'paid' ? '✅已收' : '❌未收'
+            const overdueMark = detail.status === 'overdue' ? ' 🔴欠租' : ''
+            console.log(`  ${item.year}年${item.month}月: ${statusEmoji}${overdueMark}`)
+          })
+        }
+        
+        // 打印本月状态
+        const detail = leaseManager.getMonthStatusDetail(property, currentYear, currentMonth)
+        console.log(`📌 本月(${currentYear}年${currentMonth}月)状态: ${detail.text} (${detail.status})`)
+        console.log('---')
+      })
+      console.log('===============================')
+    }
+  })
+},
 })

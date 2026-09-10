@@ -213,3 +213,82 @@
 .add-btn::after {
   border: none;
 }
+
+/* 未收标签（浅红色） */
+.unpaid-badge {
+  padding: 12rpx 24rpx;
+  border-radius: 32rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  background: #ffebee;
+  color: #c62828;
+  border: 2rpx solid #ef9a9a;
+  min-width: 120rpx;
+  text-align: center;
+  letter-spacing: 2rpx;
+}
+
+/* ===== 已收状态标签（替代按钮） ===== */
+.collected-badge {
+  padding: 12rpx 24rpx;
+  border-radius: 32rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 2rpx solid #a5d6a7;
+  min-width: 120rpx;
+  text-align: center;
+  letter-spacing: 2rpx;
+}
+
+/* ===== 收租按钮 ===== */
+.collect-btn {
+  background: linear-gradient(135deg, #07c160, #06ad56);
+  color: white;
+  font-size: 26rpx;
+  font-weight: 500;
+  height: 64rpx;
+  padding: 0 32rpx;
+  border-radius: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  margin: 0;
+  box-sizing: border-box;
+  box-shadow: 0 4rpx 12rpx rgba(7, 193, 96, 0.3);
+  transition: all 0.2s ease;
+}
+
+.collect-btn:active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
+.collect-btn::after {
+  border: none;
+}
+
+/* ===== 状态标签颜色 ===== */
+.status-light.green {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-light.red {
+  background: #ffebee;
+  color: #c62828;
+  animation: blink 1.2s infinite;
+}
+
+.status-light.gray {
+  background: #f5f5f5;
+  color: #999;
+}
+
+/* 欠租闪烁动画 */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}

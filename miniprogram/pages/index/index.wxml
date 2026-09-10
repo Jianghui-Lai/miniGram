@@ -19,7 +19,7 @@
         <text class="stat-value paid">{{paidRent}}元</text>
       </view>
       <view class="stat-item">
-        <text class="stat-label">未收</text>
+        <text class="stat-label">待收</text>
         <text class="stat-value pending">{{pendingRent}}元</text>
       </view>
     </view>
@@ -50,18 +50,12 @@
         </view>
         
         <view class="property-right">
-          <!-- 状态灯 -->
-          <view class="status-light {{item.isPaid ? 'paid' : 'pending'}}">
-            {{item.isPaid ? '已交租' : '未交租'}}
-          </view>
-          
-          <!-- 收租按钮 -->
-          <button class="collect-btn" 
-                  wx:if="{{!item.isPaid}}"
-                  catchtap="collectRent"
-                  data-property="{{item}}">
-            收租
-          </button>
+          <block wx:if="{{item._status === 'paid'}}">
+            <view class="collected-badge">本月已收</view>
+          </block>
+          <block wx:else>
+            <view class="unpaid-badge">待收</view>
+          </block>
         </view>
       </view>
     </block>
@@ -74,8 +68,7 @@
   </view>
 
   <!-- 添加房产按钮 -->
-  <!-- 添加房产按钮 - 底部中间加号图标 -->
-<view class="add-fab" bindtap="goToAddProperty">
-  <text class="add-icon">+</text>
-</view>
+  <view class="add-fab" bindtap="goToAddProperty">
+    <text class="add-icon">+</text>
+  </view>
 </view>
