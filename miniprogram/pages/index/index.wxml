@@ -53,9 +53,7 @@
           <block wx:if="{{item._status === 'paid'}}">
             <view class="collected-badge">本月已收</view>
           </block>
-          <block wx:else>
-            <view class="unpaid-badge">待收</view>
-          </block>
+          <view class="unpaid-badge" wx:else>待收</view>
         </view>
       </view>
     </block>

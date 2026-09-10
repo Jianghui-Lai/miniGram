@@ -123,44 +123,6 @@
   gap: 12rpx;
 }
 
-.status-light {
-  padding: 8rpx 20rpx;
-  border-radius: 30rpx;
-  font-size: 24rpx;
-  font-weight: 500;
-  min-width: 100rpx;
-  text-align: center;
-}
-
-.status-light.paid {
-  background: #e8f5e9;
-  color: #07c160;
-}
-
-.status-light.pending {
-  background: #ffebee;
-  color: #ff4d4f;
-}
-
-.collect-btn {
-  background: #07c160;
-  color: white;
-  font-size: 26rpx;
-  font-weight: 500;
-  height: 64rpx;
-  width: 20rpx; 
-  border-radius: 32rpx;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  margin: 0;
-  box-sizing: border-box;
-}
-
-.collect-btn::after {
-  border: none;
-}
-
 /* 空状态 */
 .empty-state {
   text-align: center;
@@ -184,7 +146,7 @@
 .add-fab {
   position: fixed;
   right: 30rpx;
-  bottom: 130rpx;           /* TabBar 高度约 100rpx，再加 30rpx 间距 */
+  bottom: 130rpx; 
   width: 100rpx;
   height: 100rpx;
   background: #07c160;
@@ -208,10 +170,6 @@
   color: white;
   line-height: 1;
   margin-top: -4rpx;   /* 微调垂直居中 */
-}
-
-.add-btn::after {
-  border: none;
 }
 
 /* 未收标签（浅红色） */
@@ -240,55 +198,4 @@
   min-width: 120rpx;
   text-align: center;
   letter-spacing: 2rpx;
-}
-
-/* ===== 收租按钮 ===== */
-.collect-btn {
-  background: linear-gradient(135deg, #07c160, #06ad56);
-  color: white;
-  font-size: 26rpx;
-  font-weight: 500;
-  height: 64rpx;
-  padding: 0 32rpx;
-  border-radius: 32rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  margin: 0;
-  box-sizing: border-box;
-  box-shadow: 0 4rpx 12rpx rgba(7, 193, 96, 0.3);
-  transition: all 0.2s ease;
-}
-
-.collect-btn:active {
-  transform: scale(0.95);
-  opacity: 0.8;
-}
-
-.collect-btn::after {
-  border: none;
-}
-
-/* ===== 状态标签颜色 ===== */
-.status-light.green {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-
-.status-light.red {
-  background: #ffebee;
-  color: #c62828;
-  animation: blink 1.2s infinite;
-}
-
-.status-light.gray {
-  background: #f5f5f5;
-  color: #999;
-}
-
-/* 欠租闪烁动画 */
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
 }

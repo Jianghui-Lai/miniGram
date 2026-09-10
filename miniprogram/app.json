@@ -1,4 +1,5 @@
 {
+  "lazyCodeLoading": "requiredComponents",
   "pages": [
     "pages/index/index",
     "pages/all-properties/all-properties",
@@ -21,13 +22,13 @@
         "pagePath": "pages/index/index",
         "text": "首页",
         "iconPath": "/images/home.png",
-        "selectedIconPath": "/images/home-active.png"
+        "selectedIconPath": "/images/home.png"
       },
       {
         "pagePath": "pages/all-properties/all-properties",
         "text": "所有房产",
         "iconPath": "images/list.png",
-        "selectedIconPath": "images/list-active.png"
+        "selectedIconPath": "images/list.png"
       }
     ]
   },
