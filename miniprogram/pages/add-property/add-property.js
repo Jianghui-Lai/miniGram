@@ -1,3 +1,5 @@
+const propertyRepo = require('../../utils/property-repo.js')
+
 Page({
   data: {
     address: '',
@@ -78,7 +80,7 @@ Page({
     return Object.keys(errors).length === 0
   },
 
-  saveProperty() {
+  async saveProperty() {
     if (!this.validateForm()) {
       this.showValidationError()
       return
@@ -86,64 +88,28 @@ Page({
 
     wx.showLoading({ title: '保存中...', mask: true })
 
-    const newProperty = {
-      id: Date.now(),
-      address: this.data.address.trim(),
-      monthlyRent: parseFloat(this.data.monthlyRent),
-      tenantName: this.data.tenantName || '',
-      tenantPhone: this.data.tenantPhone || '',
-      leaseStart: this.data.leaseStart || '',
-      leaseEnd: this.data.leaseEnd || '',
-      remark: this.data.remark || '',
-      totalReceivedRent: 0,
-      paymentHistory: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+    const created = await propertyRepo.create({
+      address: this.data.address,
+      monthlyRent: this.data.monthlyRent,
+      tenantName: this.data.tenantName,
+      tenantPhone: this.data.tenantPhone,
+      leaseStart: this.data.leaseStart,
+      leaseEnd: this.data.leaseEnd,
+      remark: this.data.remark
+    })
+
+    wx.hideLoading()
+
+    if (!created) {
+      return wx.showToast({ title: '保存失败，请重试', icon: 'none' })
     }
 
-    wx.getStorage({
-      key: 'properties',
-      success: (res) => {
-        const properties = res.data || []
-        properties.push(newProperty)
-        wx.setStorage({
-          key: 'properties',
-          data: properties,
-          success: () => {
-            wx.hideLoading()
-            wx.showToast({
-              title: '添加成功',
-              icon: 'success',
-              duration: 1500,
-              success: () => {
-                setTimeout(() => {
-                  wx.navigateBack()
-                }, 1500)
-              }
-            })
-          }
-        })
-      },
-      fail: () => {
-        wx.setStorage({
-          key: 'properties',
-          data: [newProperty],
-          success: () => {
-            wx.hideLoading()
-            wx.showToast({
-              title: '添加成功',
-              icon: 'success',
-              duration: 1500,
-              success: () => {
-                setTimeout(() => {
-                  wx.navigateBack()
-                }, 1500)
-              }
-            })
-          }
-        })
-      }
+    wx.showToast({
+      title: '添加成功',
+      icon: 'success',
+      duration: 1500
     })
+    setTimeout(() => wx.navigateBack(), 1500)
   },
 
   showValidationError() {

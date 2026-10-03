@@ -1,5 +1,6 @@
-const leaseManager = require('../../utils/lease-manager.js')
-const propertyService = require('../../utils/property-store.js')
+const dateUtils = require('../../utils/date-utils.js')
+const propertyRepo = require('../../utils/property-repo.js')
+const propertyQuery = require('../../utils/property-query.js')
 
 Page({
   data: {
@@ -15,63 +16,41 @@ Page({
     overdueMonthsCount: 0,
     pendingMonthsCount: 0,
     showEditModal: false,
-    editForm: { /* ... */ }
+    editForm: {}
   },
 
   onLoad(options) {
+    const { year, month } = dateUtils.currentYearMonth()
     this.setData({
       propertyId: parseInt(options.id),
-      currentYear: new Date().getFullYear(),
-      currentMonth: new Date().getMonth() + 1
+      currentYear: year,
+      currentMonth: month
     })
     this.loadPropertyData()
   },
 
   // ========== 数据加载 ==========
-  
+
   async loadPropertyData() {
-    const properties = await propertyService.getAllProperties()
-    const property = properties.find(p => p.id === this.data.propertyId)
+    const property = await propertyRepo.findById(this.data.propertyId)
     if (!property) return
-    
-    const status = leaseManager.getPropertyStatus(property)
-    const year = this.data.currentYear
-    const currentMonth = this.data.currentMonth
-    
-    // 获取该年所有月份状态
-    const allMonths = leaseManager.getAllDueMonths(property)
-    const yearMonths = allMonths.filter(item => item.year === year)
-    
-    const monthsData = yearMonths.map(item => {
-      const detail = leaseManager.getMonthStatusDetail(property, item.year, item.month)
-      return {
-        year: item.year,
-        month: item.month,
-        amount: item.amount,
-        status: detail.status,
-        dotColor: detail.color,
-        statusText: detail.text
-      }
-    })
-    
-    // 本月状态
-    const currentDetail = leaseManager.getMonthStatusDetail(property, year, currentMonth)
-    property._status = currentDetail.status
-    
-    this.setData({
+
+    const { property: viewProperty, ...rest } = propertyQuery.buildPropertyDetail(
       property,
-      status,
-      statusText: leaseManager.STATUS_TEXT[status],
-      isRenting: status === leaseManager.STATUS.RENTING,
-      monthsData,
-      paidMonthsCount: monthsData.filter(m => m.status === 'paid').length,
-      overdueMonthsCount: monthsData.filter(m => m.status === 'overdue').length,
-      pendingMonthsCount: monthsData.filter(m => m.status === 'unpaid').length
-    })
+      this.data.currentYear,
+      this.data.currentMonth
+    )
+
+    this.setData({ property: viewProperty, ...rest })
+  },
+
+  // 返回上一页时对方会走自己的 onShow，这里不需要再翻页面栈
+  refreshAll() {
+    this.loadPropertyData()
   },
 
   // ========== 年份切换 ==========
-  
+
   prevYear() {
     this.setData({ currentYear: this.data.currentYear - 1 }, () => {
       this.loadPropertyData()
@@ -85,12 +64,12 @@ Page({
   },
 
   // ========== 收租 / 撤销 ==========
-  
+
   // 统一入口：点击日历圆点
   async onMonthTap(e) {
     const { month, status, amount } = e.currentTarget.dataset
     const year = this.data.currentYear
-    
+
     if (status === 'paid') {
       const confirmed = await this.confirmDialog(
         '⚠️ 撤销确认',
@@ -98,7 +77,8 @@ Page({
         '#ff4d4f'
       )
       if (confirmed) {
-        await propertyService.cancelRent(this.data.propertyId, year, month)
+        const ok = await propertyRepo.cancelRent(this.data.propertyId, year, month)
+        if (!ok) return wx.showToast({ title: '操作失败，请重试', icon: 'none' })
         wx.showToast({ title: '已撤销', icon: 'none' })
         this.refreshAll()
       }
@@ -108,49 +88,52 @@ Page({
         `确认收到 ${year}年${month}月 ${amount} 元租金吗？`
       )
       if (confirmed) {
-        await propertyService.collectRent(this.data.propertyId, year, month, amount)
+        const ok = await propertyRepo.collectRent(this.data.propertyId, year, month, amount)
+        if (!ok) return wx.showToast({ title: '保存失败，请重试', icon: 'none' })
         wx.showToast({ title: `收款成功 ${amount}元`, icon: 'success' })
         this.refreshAll()
       }
     }
   },
-  
+
   // 底部按钮：确认收到本月租金
   async collectRent() {
     const { property, currentYear, currentMonth } = this.data
     if (!property) return
-    
+
     const confirmed = await this.confirmDialog(
       '确认收款',
       `确认收到 ${property.monthlyRent} 元租金吗？`
     )
     if (confirmed) {
-      await propertyService.collectRent(
+      const ok = await propertyRepo.collectRent(
         this.data.propertyId, currentYear, currentMonth, property.monthlyRent
       )
+      if (!ok) return wx.showToast({ title: '保存失败，请重试', icon: 'none' })
       wx.showToast({ title: '收款成功', icon: 'success' })
       this.refreshAll()
     }
   },
-  
+
   // 底部按钮：撤销
   async cancelRent() {
     const { currentYear, currentMonth } = this.data
-    
+
     const confirmed = await this.confirmDialog(
       '⚠️ 撤销确认',
       `确定要撤销 ${currentYear}年${currentMonth}月的收租吗？`,
       '#ff4d4f'
     )
     if (confirmed) {
-      await propertyService.cancelRent(this.data.propertyId, currentYear, currentMonth)
+      const ok = await propertyRepo.cancelRent(this.data.propertyId, currentYear, currentMonth)
+      if (!ok) return wx.showToast({ title: '操作失败，请重试', icon: 'none' })
       wx.showToast({ title: '已撤销', icon: 'none' })
       this.refreshAll()
     }
   },
 
   // ========== 编辑 ==========
-  
+
   showEditModal() {
     const p = this.data.property
     this.setData({
@@ -171,6 +154,9 @@ Page({
     this.setData({ showEditModal: false })
   },
 
+  // 阻止点击弹窗内容时冒泡到遮罩层而关闭弹窗
+  preventClose() {},
+
   onEditInput(e) {
     const field = e.currentTarget.dataset.field
     this.setData({ [`editForm.${field}`]: e.detail.value })
@@ -184,15 +170,17 @@ Page({
     if (!form.monthlyRent || parseFloat(form.monthlyRent) <= 0) {
       return wx.showToast({ title: '请输入有效租金', icon: 'none' })
     }
-    
-    await propertyService.updateProperty(this.data.propertyId, form)
+
+    const ok = await propertyRepo.update(this.data.propertyId, form)
+    if (!ok) return wx.showToast({ title: '保存失败，请重试', icon: 'none' })
+
     wx.showToast({ title: '保存成功', icon: 'success' })
     this.hideEditModal()
     this.refreshAll()
   },
 
   // ========== 删除 ==========
-  
+
   async deleteProperty() {
     const confirmed = await this.confirmDialog(
       '确认删除',
@@ -200,14 +188,14 @@ Page({
       '#ff4d4f'
     )
     if (confirmed) {
-      await propertyService.deleteProperty(this.data.propertyId)
+      await propertyRepo.remove(this.data.propertyId)
       wx.showToast({ title: '删除成功', icon: 'success' })
       setTimeout(() => wx.navigateBack(), 1500)
     }
   },
 
   // ========== 工具方法 ==========
-  
+
   // 弹窗封装
   confirmDialog(title, content, confirmColor) {
     return new Promise((resolve) => {
@@ -218,17 +206,5 @@ Page({
         success: (res) => resolve(res.confirm)
       })
     })
-  },
-  
-  // 统一刷新
-  refreshAll() {
-    this.loadPropertyData()
-    
-    const pages = getCurrentPages()
-    const homePage = pages.find(p => p.route === 'pages/index/index')
-    if (homePage?.loadProperties) homePage.loadProperties()
-    
-    const allPage = pages.find(p => p.route === 'pages/all-properties/all-properties')
-    if (allPage?.loadProperties) allPage.loadProperties()
   }
 })

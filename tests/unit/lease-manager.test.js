@@ -154,19 +154,21 @@ describe('M系列：isActiveInMonth() - 检查某月是否在租期内', () => {
 // ============================================
 describe('D系列：提醒日期计算与检查', () => {
   
+  // 断言一律用本地日期分量（getFullYear/getMonth/getDate），
+  // 不用 toISOString()，否则在不同时区跑会得到差一天的结果
   test('D-01: 提醒日期计算 - 当月有相同日期', () => {
     const result = getReminderDate('2024-01-31', 2024, 3)
-    expect(result.toISOString().split('T')[0]).toBe('2024-03-31')
+    expect([result.getFullYear(), result.getMonth(), result.getDate()]).toEqual([2024, 2, 31])
   })
 
   test('D-02: 提醒日期计算 - 当月无31号，取最后一天', () => {
     const result = getReminderDate('2024-01-31', 2024, 4)
-    expect(result.toISOString().split('T')[0]).toBe('2024-04-30')
+    expect([result.getFullYear(), result.getMonth(), result.getDate()]).toEqual([2024, 3, 30])
   })
 
   test('D-03: 提醒日期计算 - 当月有30号', () => {
     const result = getReminderDate('2024-01-30', 2024, 4)
-    expect(result.toISOString().split('T')[0]).toBe('2024-04-30')
+    expect([result.getFullYear(), result.getMonth(), result.getDate()]).toEqual([2024, 3, 30])
   })
 
   test('D-04: shouldRemind - 未交租且已过提醒日', () => {
@@ -214,7 +216,7 @@ describe('F系列：表单验证逻辑', () => {
     }
     const isValid = form.address && form.address.trim() !== '' && 
                     form.monthlyRent && parseFloat(form.monthlyRent) > 0
-    expect(isValid).toBe(false)
+    expect(isValid).toBeFalsy()
   })
 
   test('F-03: 租金为空', () => {
@@ -224,7 +226,7 @@ describe('F系列：表单验证逻辑', () => {
     }
     const isValid = form.address && form.address.trim() !== '' && 
                     form.monthlyRent && parseFloat(form.monthlyRent) > 0
-    expect(isValid).toBe(false)
+    expect(isValid).toBeFalsy()
   })
 
   test('F-04: 租金为负数', () => {
