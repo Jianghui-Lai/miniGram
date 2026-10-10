@@ -51,6 +51,50 @@
   font-weight: bold;
 }
 
+/* 物业费（当月状态，与租金统计完全分开） */
+.fee-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.fee-label {
+  font-size: 26rpx;
+  opacity: 0.8;
+}
+
+.fee-right {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.fee-value {
+  font-size: 28rpx;
+  font-weight: bold;
+}
+
+.fee-value.unset {
+  font-weight: normal;
+  opacity: 0.7;
+}
+
+.fee-status {
+  padding: 6rpx 20rpx;
+  border-radius: 24rpx;
+  font-size: 24rpx;
+  background: #ffffff;
+}
+
+.fee-status.paid {
+  color: #0a9e4f;
+}
+
+.fee-status.unpaid {
+  color: #ff9800;
+}
+
 .total-received {
   display: flex;
   justify-content: space-between;

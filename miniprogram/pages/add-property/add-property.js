@@ -4,6 +4,7 @@ Page({
   data: {
     address: '',
     monthlyRent: '',
+    propertyFee: '',
     tenantName: '',
     tenantPhone: '',
     id: '',
@@ -21,6 +22,11 @@ Page({
 
   onRentInput(e) {
     this.setData({ monthlyRent: e.detail.value })
+    this.validateForm()
+  },
+
+  onPropertyFeeInput(e) {
+    this.setData({ propertyFee: e.detail.value })
     this.validateForm()
   },
 
@@ -55,7 +61,7 @@ Page({
   },
 
   validateForm() {
-    const { address, monthlyRent, tenantName, tenantPhone, id, leaseStart, leaseEnd } = this.data
+    const { address, monthlyRent, propertyFee, tenantName, tenantPhone, id, leaseStart, leaseEnd } = this.data
     const errors = {}
   
     // 地址必填
@@ -70,8 +76,15 @@ Page({
       errors.monthlyRent = '请输入有效的租金金额'
     }
   
-    // 租客姓名必填
-    if (!tenantName || tenantName.trim() === '') {
+  // 物业费选填：留空不校验，填了必须是 >= 0 的数字
+  if (propertyFee !== undefined && propertyFee !== null && String(propertyFee).trim() !== '') {
+    if (isNaN(propertyFee) || parseFloat(propertyFee) < 0) {
+      errors.propertyFee = '请输入有效的物业费金额'
+    }
+  }
+
+  // 租客姓名必填
+  if (!tenantName || tenantName.trim() === '') {
       errors.tenantName = '请输入租客姓名'
     }
   
@@ -120,6 +133,7 @@ Page({
     const created = await propertyRepo.create({
       address: this.data.address,
       monthlyRent: this.data.monthlyRent,
+      propertyFee: this.data.propertyFee,
       tenantName: this.data.tenantName,
       tenantPhone: this.data.tenantPhone,
       id: this.data.id || '',
@@ -148,6 +162,8 @@ Page({
       wx.showToast({ title: errors.address, icon: 'none' })
     } else if (errors.monthlyRent) {
       wx.showToast({ title: errors.monthlyRent, icon: 'none' })
+    } else if (errors.propertyFee) {
+      wx.showToast({ title: errors.propertyFee, icon: 'none' })
     } else if (errors.tenantName) {
       wx.showToast({ title: errors.tenantName, icon: 'none' })
     } else if (errors.tenantPhone) {

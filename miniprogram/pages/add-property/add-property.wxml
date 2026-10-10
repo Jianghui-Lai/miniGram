@@ -14,6 +14,12 @@
     </view>
 
     <view class="form-item">
+      <text class="label">物业管理费（元/月）</text>
+      <input class="input" type="digit" placeholder="选填，例：200" bindinput="onPropertyFeeInput" value="{{propertyFee}}"/>
+      <text class="error" wx:if="{{errors.propertyFee}}">{{errors.propertyFee}}</text>
+    </view>
+
+    <view class="form-item">
       <text class="label required">租客姓名</text>
       <input class="input" 
             placeholder="请输入租客姓名" 

@@ -6,6 +6,7 @@
 
 const leaseManager = require('./lease-manager.js')
 const rentStatus = require('./rent-status.js')
+const feeStatus = require('./fee-status.js')
 const money = require('./money.js')
 
 /**
@@ -97,7 +98,9 @@ function buildPropertyDetail(property, year, month) {
     monthsData,
     paidMonthsCount: countBy(rentStatus.STATUS.PAID),
     overdueMonthsCount: countBy(rentStatus.STATUS.OVERDUE),
-    pendingMonthsCount: countBy(rentStatus.STATUS.UNPAID)
+    pendingMonthsCount: countBy(rentStatus.STATUS.UNPAID),
+    // 物业费：只回答「当月交没交」，不进年历、不进统计、不进提醒
+    fee: feeStatus.getStatusDetail(property, year, month)
   }
 }
 

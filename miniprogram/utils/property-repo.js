@@ -52,12 +52,14 @@ async function create(form) {
     id: Date.now(),
     address: String(form.address || '').trim(),
     monthlyRent: money.num(form.monthlyRent),
+    propertyFee: money.num(form.propertyFee),
     tenantName: form.tenantName || '',
     tenantPhone: form.tenantPhone || '',
     leaseStart: form.leaseStart || '',
     leaseEnd: form.leaseEnd || '',
     remark: form.remark || '',
     paymentHistory: [],
+    propertyFeeHistory: [],
     createdAt: now,
     updatedAt: now
   }
@@ -79,8 +81,8 @@ async function update(id, form) {
   if (index === -1) return false
 
   const old = list[index]
-  // paymentHistory / id / createdAt 不允许被表单覆盖
-  const { paymentHistory, id: _id, createdAt, ...rest } = form
+  // paymentHistory / propertyFeeHistory / id / createdAt 不允许被表单覆盖
+  const { paymentHistory, propertyFeeHistory, id: _id, createdAt, ...rest } = form
 
   list[index] = {
     ...old,
@@ -88,7 +90,9 @@ async function update(id, form) {
     id: old.id,
     createdAt: old.createdAt,
     paymentHistory: old.paymentHistory || [],
+    propertyFeeHistory: old.propertyFeeHistory || [],
     monthlyRent: form.monthlyRent === undefined ? old.monthlyRent : money.num(form.monthlyRent),
+    propertyFee: form.propertyFee === undefined ? money.num(old.propertyFee) : money.num(form.propertyFee),
     updatedAt: dateUtils.nowISO()
   }
 
@@ -178,6 +182,78 @@ async function cancelRent(id, year, month) {
   return await storage.write(KEY, list)
 }
 
+// ============ 物业费 / 撤销 ============
+
+/**
+ * 标记当月物业费已缴
+ * - 幂等：该月已是 paid 时直接返回 true，不篡改原始金额与日期
+ * - amount 不传时按该房产的月物业费入账
+ * @param {number} id
+ * @param {number} year
+ * @param {number} month
+ * @param {number} [amount]
+ * @returns {Promise<boolean>}
+ */
+async function collectPropertyFee(id, year, month, amount) {
+  const list = await getAll()
+  const index = list.findIndex(p => p.id === id)
+  if (index === -1) return false
+
+  const property = list[index]
+  const history = property.propertyFeeHistory || []
+  const today = dateUtils.formatDate(new Date())
+  const feeAmount = amount === undefined ? money.num(property.propertyFee) : money.num(amount)
+  const existingIndex = history.findIndex(p => p.year === year && p.month === month)
+
+  if (existingIndex !== -1) {
+    if (history[existingIndex].status === 'paid') {
+      return true // 已缴，重复点击不改变历史
+    }
+    history[existingIndex].status = 'paid'
+    history[existingIndex].date = today
+    history[existingIndex].amount = feeAmount
+  } else {
+    history.push({
+      year,
+      month,
+      status: 'paid',
+      date: today,
+      amount: feeAmount
+    })
+  }
+
+  property.propertyFeeHistory = history
+  property.updatedAt = dateUtils.nowISO()
+
+  return await storage.write(KEY, list)
+}
+
+/**
+ * 撤销当月物业费（回到未缴）
+ * @param {number} id
+ * @param {number} year
+ * @param {number} month
+ * @returns {Promise<boolean>}
+ */
+async function cancelPropertyFee(id, year, month) {
+  const list = await getAll()
+  const index = list.findIndex(p => p.id === id)
+  if (index === -1) return false
+
+  const history = list[index].propertyFeeHistory || []
+  const recordIndex = history.findIndex(p => p.year === year && p.month === month)
+  if (recordIndex === -1) return false
+
+  history[recordIndex].status = 'unpaid'
+  history[recordIndex].date = null
+  history[recordIndex].amount = 0
+
+  list[index].propertyFeeHistory = history
+  list[index].updatedAt = dateUtils.nowISO()
+
+  return await storage.write(KEY, list)
+}
+
 // ============ 派生计算 ============
 
 /**
@@ -201,5 +277,7 @@ module.exports = {
   remove,
   collectRent,
   cancelRent,
+  collectPropertyFee,
+  cancelPropertyFee,
   calcTotalReceived
 }

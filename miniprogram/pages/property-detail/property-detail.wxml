@@ -11,6 +11,15 @@
       <text class="rent-value">{{property.monthlyRent}}元</text>
     </view>
     
+    <view class="fee-info">
+      <text class="fee-label">物业费</text>
+      <view class="fee-right">
+        <text class="fee-value" wx:if="{{fee.hasFee}}">{{fee.dueAmount}}元/月</text>
+        <text class="fee-value unset" wx:else>未设置</text>
+        <view class="fee-status {{fee.status}}" wx:if="{{fee.hasFee}}" bindtap="togglePropertyFee">{{fee.text}}</view>
+      </view>
+    </view>
+
     <view class="total-received">
       <text class="received-label">累计已收租金</text>
       <text class="received-value">{{property.totalReceivedRent || 0}}元</text>
@@ -117,6 +126,11 @@
       <input class="input" type="digit" placeholder="请输入月租金" value="{{editForm.monthlyRent}}" bindinput="onEditInput" data-field="monthlyRent"/>
     </view>
     
+    <view class="form-item">
+      <text class="label">物业管理费（元/月）</text>
+      <input class="input" type="digit" placeholder="选填" value="{{editForm.propertyFee}}" bindinput="onEditInput" data-field="propertyFee"/>
+    </view>
+
     <view class="form-item">
       <text class="label">租客姓名</text>
       <input class="input" placeholder="选填" value="{{editForm.tenantName}}" bindinput="onEditInput" data-field="tenantName"/>

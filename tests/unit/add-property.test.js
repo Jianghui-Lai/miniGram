@@ -178,6 +178,89 @@ describe('M系列：onRentInput() - 月租金', () => {
 })
 
 // ============================================
+// F系列：物业管理费（选填）
+// ============================================
+describe('F系列：onPropertyFeeInput() - 物业管理费', () => {
+
+  // 注：fillValid() 没填身份证，表单本身就不合法，这里另起一套填满必填项的
+  function fillRequired(page) {
+    page.setData({
+      address: '阳光小区 3-101',
+      monthlyRent: '3000',
+      tenantName: '张三',
+      tenantPhone: '13800138000',
+      id: '110101199001011234',
+      leaseStart: '2024-01-01',
+      leaseEnd: '2024-12-31'
+    })
+    page.validateForm()
+    return page
+  }
+
+  test('F-01: 留空不报错，也不影响提交', () => {
+    const page = fillRequired(newPage())
+    page.onPropertyFeeInput({ detail: { value: '' } })
+    expect(page.data.errors.propertyFee).toBeUndefined()
+    expect(page.data.canSubmit).toBe(true)
+  })
+
+  test('F-02: 填 200 合法', () => {
+    const page = fillRequired(newPage())
+    page.onPropertyFeeInput({ detail: { value: '200' } })
+    expect(page.data.errors.propertyFee).toBeUndefined()
+    expect(page.data.canSubmit).toBe(true)
+  })
+
+  test('F-03: 填 0 视为合法（免物业费）', () => {
+    const page = fillRequired(newPage())
+    page.onPropertyFeeInput({ detail: { value: '0' } })
+    expect(page.data.errors.propertyFee).toBeUndefined()
+    expect(page.data.canSubmit).toBe(true)
+  })
+
+  test('F-04: 负数报错并拦住保存', async () => {
+    mockCreate.mockResolvedValue({ id: 1 })
+    const page = fillRequired(newPage())
+    page.onPropertyFeeInput({ detail: { value: '-100' } })
+    expect(page.data.errors.propertyFee).toBe('请输入有效的物业费金额')
+
+    await page.saveProperty()
+
+    expect(mockCreate).not.toHaveBeenCalled()
+    expect(global.wx.showToast).toHaveBeenCalledWith({
+      title: '请输入有效的物业费金额',
+      icon: 'none'
+    })
+  })
+
+  test('F-05: 保存时原样透传（数字转换交给 repo）', async () => {
+    mockCreate.mockResolvedValue({ id: 1 })
+    const page = fillRequired(newPage())
+    page.onPropertyFeeInput({ detail: { value: '200' } })
+
+    await page.saveProperty()
+
+    expect(mockCreate).toHaveBeenCalledTimes(1)
+    expect(mockCreate.mock.calls[0][0].propertyFee).toBe('200')
+  })
+
+  test('F-06: 没填时透传空字符串', async () => {
+    mockCreate.mockResolvedValue({ id: 1 })
+    const page = fillRequired(newPage())
+
+    await page.saveProperty()
+
+    expect(mockCreate.mock.calls[0][0].propertyFee).toBe('')
+  })
+
+  test('F-07: WXML 绑定的 onPropertyFeeInput 页面已实现', () => {
+    const wxml = fs.readFileSync(WXML_PATH, 'utf8')
+    expect(wxml).toContain('bindinput="onPropertyFeeInput"')
+    expect(typeof pageConfig.onPropertyFeeInput).toBe('function')
+  })
+})
+
+// ============================================
 // N系列：选填字段（姓名 / 电话 / 身份证 / 备注）
 // ============================================
 describe('N系列：选填字段输入', () => {
@@ -414,6 +497,7 @@ describe('S系列：saveProperty() - 保存房产', () => {
     expect(mockCreate).toHaveBeenCalledWith({
       address: '阳光小区 3-101',
       monthlyRent: '3000',
+      propertyFee: '',
       tenantName: '张三',
       tenantPhone: '13800138000',
       leaseStart: '2024-01-01',

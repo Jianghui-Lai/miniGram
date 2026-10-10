@@ -17,6 +17,7 @@ Page({
     reminder: {},            // 收租提醒状态（提醒条用）
     reminderDay: null,       // 每月提醒日（常驻展示）
     monthsData: [],
+    fee: {},                // 当月物业费状态（hasFee / status / text / dueAmount）
     paidMonthsCount: 0,
     overdueMonthsCount: 0,
     pendingMonthsCount: 0,
@@ -61,6 +62,41 @@ Page({
   // 返回上一页时对方会走自己的 onShow，这里不需要再翻页面栈
   refreshAll() {
     this.loadPropertyData()
+  },
+
+  // ========== 物业费（只管当月，不进年历/统计/提醒） ==========
+
+  // 点击状态标签：已缴 → 撤销；未缴 → 标记已缴
+  async togglePropertyFee() {
+    const { fee, propertyId, currentYear, currentMonth } = this.data
+    if (!fee || fee.status === 'not_set') return
+
+    if (fee.status === 'paid') {
+      const confirmed = await this.confirmDialog(
+        '⚠️ 撤销确认',
+        `确定撤销 ${currentYear}年${currentMonth}月物业费的缴纳记录吗？`,
+        '#ff4d4f'
+      )
+      if (!confirmed) return
+
+      const ok = await propertyRepo.cancelPropertyFee(propertyId, currentYear, currentMonth)
+      if (!ok) return wx.showToast({ title: '操作失败，请重试', icon: 'none' })
+      wx.showToast({ title: '已撤销', icon: 'none' })
+      this.refreshAll()
+    } else {
+      const confirmed = await this.confirmDialog(
+        '确认缴费',
+        `确认已交 ${currentYear}年${currentMonth}月物业费 ${fee.dueAmount} 元吗？`
+      )
+      if (!confirmed) return
+
+      const ok = await propertyRepo.collectPropertyFee(
+        propertyId, currentYear, currentMonth, fee.dueAmount
+      )
+      if (!ok) return wx.showToast({ title: '保存失败，请重试', icon: 'none' })
+      wx.showToast({ title: `已缴 ${fee.dueAmount}元`, icon: 'success' })
+      this.refreshAll()
+    }
   },
 
   // ========== 年份切换 ==========
@@ -155,6 +191,7 @@ Page({
       editForm: {
         address: p.address,
         monthlyRent: String(p.monthlyRent),
+        propertyFee: p.propertyFee === undefined || p.propertyFee === null ? '' : String(p.propertyFee),
         tenantName: p.tenantName || '',
         tenantPhone: p.tenantPhone || '',
         leaseStart: p.leaseStart || '',
@@ -183,6 +220,10 @@ Page({
     }
     if (!form.monthlyRent || parseFloat(form.monthlyRent) <= 0) {
       return wx.showToast({ title: '请输入有效租金', icon: 'none' })
+    }
+    // 物业费选填：留空算未设置，填了不能为负
+    if (form.propertyFee !== '' && parseFloat(form.propertyFee) < 0) {
+      return wx.showToast({ title: '请输入有效物业费', icon: 'none' })
     }
 
     const ok = await propertyRepo.update(this.data.propertyId, form)
