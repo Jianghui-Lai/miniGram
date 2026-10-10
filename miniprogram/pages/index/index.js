@@ -1,6 +1,7 @@
 const dateUtils = require('../../utils/date-utils.js')
 const propertyRepo = require('../../utils/property-repo.js')
 const propertyQuery = require('../../utils/property-query.js')
+const reminder = require('../../utils/reminder.js')
 
 Page({
   data: {
@@ -10,7 +11,8 @@ Page({
     pendingRent: 0,
     overdueCount: 0,
     pendingCount: 0,       // 待收租数量（红点）
-    currentMonth: ''
+    currentMonth: '',
+    reminder: {}           // 收租提醒汇总（横幅用）
   },
 
   onLoad() {
@@ -29,12 +31,13 @@ Page({
       propertyQuery.buildDashboard(list, year, month)
 
     this.setData({
-      properties,
+      properties: reminder.attachReminder(properties, year, month),
       totalRent,
       paidRent,
       pendingRent,
       pendingCount,
-      overdueCount
+      overdueCount,
+      reminder: reminder.buildReminderSummary(properties, year, month)
     })
   },
 

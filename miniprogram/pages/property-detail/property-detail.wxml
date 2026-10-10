@@ -17,11 +17,23 @@
     </view>
   </view>
 
+  <!-- 收租提醒条 -->
+  <view class="reminder-bar {{reminder.level}}" wx:if="{{reminder.level !== 'none'}}">
+    <text class="reminder-icon">{{reminder.level === 'due' ? '⚠️' : '🔔'}}</text>
+    <view class="reminder-content">
+      <text class="reminder-title">{{reminder.levelText}}</text>
+      <text class="reminder-desc">{{reminder.text}}，应收 {{property.monthlyRent}} 元</text>
+    </view>
+  </view>
+
   <!-- 租期信息 -->
   <view class="info-card" wx:if="{{property.leaseStart}}">
     <view class="card-title">📅 租期信息</view>
     <view class="lease-dates">
       <text>{{property.leaseStart}} 至 {{property.leaseEnd}}</text>
+    </view>
+    <view class="reminder-day" wx:if="{{reminderDay}}">
+      🔔 每月 {{reminderDay}} 日提醒收租
     </view>
   </view>
 

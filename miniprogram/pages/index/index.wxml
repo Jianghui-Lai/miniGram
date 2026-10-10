@@ -25,6 +25,12 @@
     </view>
   </view>
 
+  <!-- 收租提醒横幅 -->
+  <view class="reminder-banner {{reminder.dueCount > 0 ? 'due' : 'upcoming'}}" wx:if="{{reminder.hasReminder}}">
+    <text class="banner-icon">{{reminder.dueCount > 0 ? '⚠️' : '🔔'}}</text>
+    <text class="banner-text">{{reminder.text}}</text>
+  </view>
+
   <!-- 出租中房产列表 -->
   <view class="section-header">
     <text class="section-title">🏠 出租中 ({{properties.length}}套)</text>
@@ -50,6 +56,9 @@
         </view>
         
         <view class="property-right">
+          <view class="reminder-tag {{item._reminder.level}}" wx:if="{{item._reminder.level !== 'none'}}">
+            {{item._reminder.levelText}} · {{item._reminder.text}}
+          </view>
           <block wx:if="{{item._status === 'paid'}}">
             <view class="collected-badge">本月已收</view>
           </block>

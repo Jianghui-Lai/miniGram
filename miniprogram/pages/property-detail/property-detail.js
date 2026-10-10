@@ -1,6 +1,7 @@
 const dateUtils = require('../../utils/date-utils.js')
 const propertyRepo = require('../../utils/property-repo.js')
 const propertyQuery = require('../../utils/property-query.js')
+const reminder = require('../../utils/reminder.js')
 
 Page({
   data: {
@@ -11,6 +12,10 @@ Page({
     isRenting: false,
     currentYear: 2024,
     currentMonth: 1,
+    reminderYear: 2024,      // 提醒只算「今天所在的月」，不随年历切换年份漂移
+    reminderMonth: 1,
+    reminder: {},            // 收租提醒状态（提醒条用）
+    reminderDay: null,       // 每月提醒日（常驻展示）
     monthsData: [],
     paidMonthsCount: 0,
     overdueMonthsCount: 0,
@@ -24,7 +29,9 @@ Page({
     this.setData({
       propertyId: parseInt(options.id),
       currentYear: year,
-      currentMonth: month
+      currentMonth: month,
+      reminderYear: year,
+      reminderMonth: month
     })
     this.loadPropertyData()
   },
@@ -41,7 +48,14 @@ Page({
       this.data.currentMonth
     )
 
-    this.setData({ property: viewProperty, ...rest })
+    const { reminderYear, reminderMonth } = this.data
+
+    this.setData({
+      property: viewProperty,
+      ...rest,
+      reminder: reminder.getReminderState(property, reminderYear, reminderMonth),
+      reminderDay: reminder.getReminderDay(property)
+    })
   },
 
   // 返回上一页时对方会走自己的 onShow，这里不需要再翻页面栈

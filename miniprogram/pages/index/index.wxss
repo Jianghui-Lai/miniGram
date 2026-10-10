@@ -60,6 +60,56 @@
   color: #ffe082;
 }
 
+/* 收租提醒横幅 */
+.reminder-banner {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin: 0 20rpx 20rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 16rpx;
+  font-size: 26rpx;
+}
+
+.reminder-banner.due {
+  background: #ffebee;
+  color: #c62828;
+  border: 2rpx solid #ef9a9a;
+}
+
+.reminder-banner.upcoming {
+  background: #fff8e1;
+  color: #ef6c00;
+  border: 2rpx solid #ffd8a8;
+}
+
+.banner-icon {
+  font-size: 28rpx;
+}
+
+.banner-text {
+  font-weight: 500;
+}
+
+/* 列表项提醒角标 */
+.reminder-tag {
+  padding: 6rpx 16rpx;
+  border-radius: 24rpx;
+  font-size: 22rpx;
+  font-weight: 500;
+  text-align: right;
+}
+
+.reminder-tag.due {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.reminder-tag.upcoming {
+  background: #fff8e1;
+  color: #ef6c00;
+}
+
 /* 房产列表 */
 .section-header {
   margin: 20rpx 20rpx 10rpx;
