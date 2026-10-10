@@ -14,14 +14,30 @@
     </view>
 
     <view class="form-item">
-      <text class="label">租客姓名</text>
-      <input class="input" placeholder="选填" bindinput="onTenantNameInput" value="{{tenantName}}"/>
+      <text class="label required">租客姓名</text>
+      <input class="input" 
+            placeholder="请输入租客姓名" 
+            bindinput="onTenantNameInput" 
+            value="{{tenantName}}"/>
+      <text class="error" wx:if="{{errors.tenantName}}">{{errors.tenantName}}</text>
     </view>
 
     <view class="form-item">
-      <text class="label">联系电话</text>
-      <input class="input" type="number" placeholder="选填" bindinput="onTenantPhoneInput" value="{{tenantPhone}}"/>
+      <text class="label required">联系电话</text>
+      <input class="input" 
+            type="number" 
+            maxlength="11"
+            placeholder="请输入手机号" 
+            bindinput="onTenantPhoneInput" 
+            value="{{tenantPhone}}"/>
       <text class="error" wx:if="{{errors.tenantPhone}}">{{errors.tenantPhone}}</text>
+    </view>
+
+
+    <view class="form-item">
+      <text class="label required">身份证号码</text>
+      <input class="input" type="idcard" maxlength="18" placeholder="请输入18位身份证号" bindinput="onIdInput" value="{{id}}"/>
+      <text class="error" wx:if="{{errors.id}}">{{errors.id}}</text>
     </view>
 
     <view class="form-row">
