@@ -59,13 +59,14 @@ function newPage() {
   return page
 }
 
-/** 填好必填项，让表单处于「可提交」状态 */
+/** 填好必填项（含身份证），让表单处于「可提交」状态 */
 function fillValid(page) {
   page.setData({
     address: '阳光小区 3-101',
     monthlyRent: '3000',
     tenantName: '张三',
     tenantPhone: '13800138000',
+    id: '110101199001011234',
     leaseStart: '2024-01-01',
     leaseEnd: '2024-12-31',
     remark: '押一付三'
@@ -107,10 +108,13 @@ describe('A系列：onAddressInput() - 房产地址', () => {
     expect(page.data.canSubmit).toBe(false)
   })
 
-  test('A-05: 地址 + 有效租金 = 可提交', () => {
+  test('A-05: 必填项（地址+租金+姓名+电话+身份证）齐全 = 可提交', () => {
     const page = newPage()
     page.onAddressInput({ detail: { value: '阳光小区' } })
     page.onRentInput({ detail: { value: '3000' } })
+    page.onTenantNameInput({ detail: { value: '张三' } })
+    page.onTenantPhoneInput({ detail: { value: '13800138000' } })
+    page.onIdInput({ detail: { value: '110101199001011234' } })
     expect(page.data.canSubmit).toBe(true)
     expect(Object.keys(page.data.errors)).toHaveLength(0)
   })
@@ -145,16 +149,14 @@ describe('M系列：onRentInput() - 月租金', () => {
   })
 
   test('M-04: 边界值 0.01 视为有效', () => {
-    const page = newPage()
-    page.onAddressInput({ detail: { value: 'A' } })
+    const page = fillValid(newPage())
     page.onRentInput({ detail: { value: '0.01' } })
     expect(page.data.errors.monthlyRent).toBeUndefined()
     expect(page.data.canSubmit).toBe(true)
   })
 
   test('M-05: 小数金额有效', () => {
-    const page = newPage()
-    page.onAddressInput({ detail: { value: 'A' } })
+    const page = fillValid(newPage())
     page.onRentInput({ detail: { value: '3000.50' } })
     expect(page.data.errors.monthlyRent).toBeUndefined()
     expect(page.data.canSubmit).toBe(true)
@@ -265,11 +267,12 @@ describe('F系列：onPropertyFeeInput() - 物业管理费', () => {
 // ============================================
 describe('N系列：选填字段输入', () => {
 
-  test('N-01: 租客姓名只写入，不触发校验', () => {
+  test('N-01: 租客姓名写入后触发校验，姓名本身不报错', () => {
     const page = newPage()
     page.onTenantNameInput({ detail: { value: '张三' } })
     expect(page.data.tenantName).toBe('张三')
-    expect(page.data.errors).toEqual({})
+    expect(page.data.errors.tenantName).toBeUndefined()
+    expect(page.data.errors.monthlyRent).toBe('请输入月租金')
     expect(page.data.canSubmit).toBe(false)
   })
 
@@ -280,12 +283,10 @@ describe('N系列：选填字段输入', () => {
     expect(page.data.errors).toEqual({})
   })
 
-  test('N-03: 手机号只写入，错误要等下一次校验才出现', () => {
+  test('N-03: 手机号写入当场就校验，非法号码立即报错', () => {
     const page = newPage()
     page.onTenantPhoneInput({ detail: { value: '123' } })
     expect(page.data.tenantPhone).toBe('123')
-    expect(page.data.errors.tenantPhone).toBeUndefined()
-    page.onAddressInput({ detail: { value: 'A' } }) // 触发校验
     expect(page.data.errors.tenantPhone).toBe('请输入有效的手机号码')
   })
 
@@ -327,11 +328,11 @@ describe('P系列：validateForm() - 手机号规则 /^1[3-9]\\d{9}$/', () => {
     expect(page.data.errors.tenantPhone).toBe('请输入有效的手机号码')
   })
 
-  test('P-03: 手机号选填，留空不报错', () => {
+  test('P-03: 手机号是必填项，留空报错', () => {
     const page = fillValid(newPage())
     page.setData({ tenantPhone: '' })
-    expect(page.validateForm()).toBe(true)
-    expect(page.data.errors.tenantPhone).toBeUndefined()
+    expect(page.validateForm()).toBe(false)
+    expect(page.data.errors.tenantPhone).toBe('请输入联系电话')
   })
 })
 
@@ -422,6 +423,9 @@ describe('V系列：validateForm() - 整体行为', () => {
     expect(page.data.errors.address).toBe('请输入房产地址')
     page.onAddressInput({ detail: { value: '阳光小区' } })
     page.onRentInput({ detail: { value: '3000' } })
+    page.onTenantNameInput({ detail: { value: '张三' } })
+    page.onTenantPhoneInput({ detail: { value: '13800138000' } })
+    page.onIdInput({ detail: { value: '110101199001011234' } })
     expect(page.data.errors.address).toBeUndefined()
     expect(page.data.errors).toEqual({})
   })
@@ -500,6 +504,7 @@ describe('S系列：saveProperty() - 保存房产', () => {
       propertyFee: '',
       tenantName: '张三',
       tenantPhone: '13800138000',
+      id: '110101199001011234',
       leaseStart: '2024-01-01',
       leaseEnd: '2024-12-31',
       remark: '押一付三'

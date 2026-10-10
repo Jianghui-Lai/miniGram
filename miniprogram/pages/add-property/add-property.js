@@ -110,12 +110,14 @@ Page({
     this.setData({ errors })
   
     // 提交条件：地址 + 租金 + 姓名 + 电话 + 身份证
-    const canSubmit =
+    // 用 !! 收敛成布尔值，否则 && 链会返回 '' / undefined，WXML 的 disabled 语义也对不上
+    const canSubmit = !!(
       address && address.trim() !== '' &&
       monthlyRent && parseFloat(monthlyRent) > 0 &&
       tenantName && tenantName.trim() !== '' &&
       tenantPhone && /^1[3-9]\d{9}$/.test(tenantPhone) &&
       id && /^\d{17}[\dXx]$/.test(id)
+    )
   
     this.setData({ canSubmit })
   
