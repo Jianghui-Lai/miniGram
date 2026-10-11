@@ -11,12 +11,13 @@
       <text class="rent-value">{{property.monthlyRent}}元</text>
     </view>
     
-    <view class="fee-info">
-      <text class="fee-label">物业费</text>
+    <!-- 当月费用：物业费（固定月费）/ 水费 / 电费（每月录入金额） -->
+    <view class="fee-info" wx:for="{{feeList}}" wx:key="key">
+      <text class="fee-label">{{item.label}}</text>
       <view class="fee-right">
-        <text class="fee-value" wx:if="{{fee.hasFee}}">{{fee.dueAmount}}元/月</text>
-        <text class="fee-value unset" wx:else>未设置</text>
-        <view class="fee-status {{fee.status}}" wx:if="{{fee.hasFee}}" bindtap="togglePropertyFee">{{fee.text}}</view>
+        <text class="fee-value" wx:if="{{item.dueAmount > 0}}">{{item.dueAmount}}{{item.unitLabel}}</text>
+        <text class="fee-value unset" wx:elif="{{item.placeholder}}">{{item.placeholder}}</text>
+        <view class="fee-status {{item.status}}" wx:if="{{item.tappable}}" bindtap="toggleFee" data-key="{{item.key}}">{{item.text}}</view>
       </view>
     </view>
 

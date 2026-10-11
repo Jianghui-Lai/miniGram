@@ -99,8 +99,10 @@ function buildPropertyDetail(property, year, month) {
     paidMonthsCount: countBy(rentStatus.STATUS.PAID),
     overdueMonthsCount: countBy(rentStatus.STATUS.OVERDUE),
     pendingMonthsCount: countBy(rentStatus.STATUS.UNPAID),
-    // 物业费：只回答「当月交没交」，不进年历、不进统计、不进提醒
-    fee: feeStatus.getStatusDetail(property, year, month)
+    // 费用：只回答「当月交没交」，不进年历、不进统计、不进提醒
+    // fee 保留物业费的详情兼容现有用法；feeList 给详情页 wx:for 三行
+    fee: feeStatus.getStatusDetail(property, year, month, 'property'),
+    feeList: feeStatus.buildFeeList(property, year, month)
   }
 }
 

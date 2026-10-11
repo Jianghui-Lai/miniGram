@@ -17,7 +17,8 @@ Page({
     reminder: {},            // 收租提醒状态（提醒条用）
     reminderDay: null,       // 每月提醒日（常驻展示）
     monthsData: [],
-    fee: {},                // 当月物业费状态（hasFee / status / text / dueAmount）
+    fee: {},                // 当月物业费状态（兼容旧用法）
+    feeList: [],            // 当月三类费用状态（物业费 / 水费 / 电费）
     paidMonthsCount: 0,
     overdueMonthsCount: 0,
     pendingMonthsCount: 0,
@@ -43,7 +44,7 @@ Page({
     const property = await propertyRepo.findById(this.data.propertyId)
     if (!property) return
 
-    const { property: viewProperty, ...rest } = propertyQuery.buildPropertyDetail(
+    const detail = propertyQuery.buildPropertyDetail(
       property,
       this.data.currentYear,
       this.data.currentMonth
@@ -52,8 +53,16 @@ Page({
     const { reminderYear, reminderMonth } = this.data
 
     this.setData({
-      property: viewProperty,
-      ...rest,
+      property: detail.property,
+      status: detail.status,
+      statusText: detail.statusText,
+      isRenting: detail.isRenting,
+      monthsData: detail.monthsData,
+      paidMonthsCount: detail.paidMonthsCount,
+      overdueMonthsCount: detail.overdueMonthsCount,
+      pendingMonthsCount: detail.pendingMonthsCount,
+      fee: detail.fee,
+      feeList: detail.feeList,
       reminder: reminder.getReminderState(property, reminderYear, reminderMonth),
       reminderDay: reminder.getReminderDay(property)
     })
@@ -64,39 +73,67 @@ Page({
     this.loadPropertyData()
   },
 
-  // ========== 物业费（只管当月，不进年历/统计/提醒） ==========
+  // ========== 费用：物业费 / 水费 / 电费（只管当月，不进年历/统计/提醒） ==========
 
-  // 点击状态标签：已缴 → 撤销；未缴 → 标记已缴
-  async togglePropertyFee() {
-    const { fee, propertyId, currentYear, currentMonth } = this.data
-    if (!fee || fee.status === 'not_set') return
+  // 点击状态标签：已缴 → 撤销；水/电 未设置 → 录入当月金额；未缴 → 确认付款
+  async toggleFee(e) {
+    const key = e.currentTarget.dataset.key
+    const item = (this.data.feeList || []).find(f => f.key === key)
+    if (!item || !item.tappable) return
 
-    if (fee.status === 'paid') {
-      const confirmed = await this.confirmDialog(
-        '⚠️ 撤销确认',
-        `确定撤销 ${currentYear}年${currentMonth}月物业费的缴纳记录吗？`,
-        '#ff4d4f'
-      )
-      if (!confirmed) return
+    const { propertyId, currentYear: year, currentMonth: month } = this.data
 
-      const ok = await propertyRepo.cancelPropertyFee(propertyId, currentYear, currentMonth)
-      if (!ok) return wx.showToast({ title: '操作失败，请重试', icon: 'none' })
-      wx.showToast({ title: '已撤销', icon: 'none' })
-      this.refreshAll()
-    } else {
-      const confirmed = await this.confirmDialog(
-        '确认缴费',
-        `确认已交 ${currentYear}年${currentMonth}月物业费 ${fee.dueAmount} 元吗？`
-      )
-      if (!confirmed) return
-
-      const ok = await propertyRepo.collectPropertyFee(
-        propertyId, currentYear, currentMonth, fee.dueAmount
-      )
-      if (!ok) return wx.showToast({ title: '保存失败，请重试', icon: 'none' })
-      wx.showToast({ title: `已缴 ${fee.dueAmount}元`, icon: 'success' })
-      this.refreshAll()
+    // 已缴 → 撤销（三类费用同一套确认框）
+    if (item.status === 'paid') {
+      return this.runAction({
+        confirm: {
+          title: '⚠️ 撤销确认',
+          content: `确定撤销 ${year}年${month}月${item.label}的缴纳记录吗？`,
+          color: '#ff4d4f'
+        },
+        action: () => propertyRepo.cancelFee(propertyId, key, year, month),
+        successText: '已撤销',
+        successIcon: 'none'
+      })
     }
+
+    // 水 / 电 未设置 → 先录入当月金额（只存应收，不改状态）
+    if (item.needInput && !(item.dueAmount > 0)) {
+      const amount = await this.promptAmount(`录入 ${year}年${month}月${item.label}`, '')
+      if (amount === null) return
+
+      return this.runAction({
+        action: () => propertyRepo.setMonthlyFee(propertyId, key, year, month, amount),
+        successText: `已录入 ${amount}元`,
+        failText: '保存失败，请重试'
+      })
+    }
+
+    // 水 / 电 已录入 → 弹窗预填金额，确认即付款
+    if (item.needInput) {
+      const amount = await this.promptAmount(
+        `${year}年${month}月${item.label}缴费`,
+        String(item.dueAmount)
+      )
+      if (amount === null) return
+
+      return this.runAction({
+        action: () => propertyRepo.collectFee(propertyId, key, year, month, amount),
+        successText: `已缴 ${amount}元`,
+        failText: '保存失败，请重试'
+      })
+    }
+
+    // 物业费：按房产上设置的月金额确认入账
+    return this.runAction({
+      confirm: {
+        title: '确认缴费',
+        content: `确认已交 ${year}年${month}月${item.label} ${item.dueAmount} 元吗？`
+      },
+      action: () => propertyRepo.collectFee(propertyId, key, year, month, item.dueAmount),
+      successText: `已缴 ${item.dueAmount}元`,
+      failText: '保存失败，请重试'
+    })
   },
 
   // ========== 年份切换 ==========
@@ -121,28 +158,28 @@ Page({
     const year = this.data.currentYear
 
     if (status === 'paid') {
-      const confirmed = await this.confirmDialog(
-        '⚠️ 撤销确认',
-        `确定撤销 ${year}年${month}月租金收款吗？`,
-        '#ff4d4f'
-      )
-      if (confirmed) {
-        const ok = await propertyRepo.cancelRent(this.data.propertyId, year, month)
-        if (!ok) return wx.showToast({ title: '操作失败，请重试', icon: 'none' })
-        wx.showToast({ title: '已撤销', icon: 'none' })
-        this.refreshAll()
-      }
-    } else if (status === 'overdue' || status === 'unpaid') {
-      const confirmed = await this.confirmDialog(
-        '确认收款',
-        `确认收到 ${year}年${month}月 ${amount} 元租金吗？`
-      )
-      if (confirmed) {
-        const ok = await propertyRepo.collectRent(this.data.propertyId, year, month, amount)
-        if (!ok) return wx.showToast({ title: '保存失败，请重试', icon: 'none' })
-        wx.showToast({ title: `收款成功 ${amount}元`, icon: 'success' })
-        this.refreshAll()
-      }
+      return this.runAction({
+        confirm: {
+          title: '⚠️ 撤销确认',
+          content: `确定撤销 ${year}年${month}月租金收款吗？`,
+          color: '#ff4d4f'
+        },
+        action: () => propertyRepo.cancelRent(this.data.propertyId, year, month),
+        successText: '已撤销',
+        successIcon: 'none'
+      })
+    }
+
+    if (status === 'overdue' || status === 'unpaid') {
+      return this.runAction({
+        confirm: {
+          title: '确认收款',
+          content: `确认收到 ${year}年${month}月 ${amount} 元租金吗？`
+        },
+        action: () => propertyRepo.collectRent(this.data.propertyId, year, month, amount),
+        successText: `收款成功 ${amount}元`,
+        failText: '保存失败，请重试'
+      })
     }
   },
 
@@ -151,35 +188,33 @@ Page({
     const { property, currentYear, currentMonth } = this.data
     if (!property) return
 
-    const confirmed = await this.confirmDialog(
-      '确认收款',
-      `确认收到 ${property.monthlyRent} 元租金吗？`
-    )
-    if (confirmed) {
-      const ok = await propertyRepo.collectRent(
+    return this.runAction({
+      confirm: {
+        title: '确认收款',
+        content: `确认收到 ${property.monthlyRent} 元租金吗？`
+      },
+      action: () => propertyRepo.collectRent(
         this.data.propertyId, currentYear, currentMonth, property.monthlyRent
-      )
-      if (!ok) return wx.showToast({ title: '保存失败，请重试', icon: 'none' })
-      wx.showToast({ title: '收款成功', icon: 'success' })
-      this.refreshAll()
-    }
+      ),
+      successText: '收款成功',
+      failText: '保存失败，请重试'
+    })
   },
 
   // 底部按钮：撤销
   async cancelRent() {
     const { currentYear, currentMonth } = this.data
 
-    const confirmed = await this.confirmDialog(
-      '⚠️ 撤销确认',
-      `确定要撤销 ${currentYear}年${currentMonth}月的收租吗？`,
-      '#ff4d4f'
-    )
-    if (confirmed) {
-      const ok = await propertyRepo.cancelRent(this.data.propertyId, currentYear, currentMonth)
-      if (!ok) return wx.showToast({ title: '操作失败，请重试', icon: 'none' })
-      wx.showToast({ title: '已撤销', icon: 'none' })
-      this.refreshAll()
-    }
+    return this.runAction({
+      confirm: {
+        title: '⚠️ 撤销确认',
+        content: `确定要撤销 ${currentYear}年${currentMonth}月的收租吗？`,
+        color: '#ff4d4f'
+      },
+      action: () => propertyRepo.cancelRent(this.data.propertyId, currentYear, currentMonth),
+      successText: '已撤销',
+      successIcon: 'none'
+    })
   },
 
   // ========== 编辑 ==========
@@ -237,29 +272,83 @@ Page({
   // ========== 删除 ==========
 
   async deleteProperty() {
-    const confirmed = await this.confirmDialog(
-      '确认删除',
-      '删除后无法恢复，确定要删除这套房产吗？',
-      '#ff4d4f'
-    )
-    if (confirmed) {
-      await propertyRepo.remove(this.data.propertyId)
-      wx.showToast({ title: '删除成功', icon: 'success' })
-      setTimeout(() => wx.navigateBack(), 1500)
-    }
+    return this.runAction({
+      confirm: {
+        title: '确认删除',
+        content: '删除后无法恢复，确定要删除这套房产吗？',
+        color: '#ff4d4f'
+      },
+      action: () => propertyRepo.remove(this.data.propertyId),
+      successText: '删除成功',
+      after: () => setTimeout(() => wx.navigateBack(), 1500)
+    })
   },
 
   // ========== 工具方法 ==========
 
-  // 弹窗封装
-  confirmDialog(title, content, confirmColor) {
+  /**
+   * 统一的「（可选）确认 → 写库 → toast → 刷新」
+   * 页面上所有写操作都走这里，避免每处重复一遍确认 / 失败提示 / 刷新
+   * @param {object} options
+   * @param {{title:string, content:string, color:string}} [options.confirm] 不传则不弹确认框
+   * @param {function():Promise<boolean>} options.action 写库动作，返回 false 视为失败
+   * @param {string} options.successText
+   * @param {'success'|'none'} [options.successIcon]
+   * @param {string} [options.failText]
+   * @param {function()} [options.after] 成功后的收尾（不传则刷新页面）
+   */
+  async runAction({ confirm, action, successText, successIcon = 'success', failText = '操作失败，请重试', after }) {
+    if (confirm) {
+      const confirmed = await this.confirmDialog(confirm.title, confirm.content, confirm.color)
+      if (!confirmed) return
+    }
+
+    const ok = await action()
+    if (!ok) return wx.showToast({ title: failText, icon: 'none' })
+
+    wx.showToast({ title: successText, icon: successIcon })
+    if (after) return after()
+    this.refreshAll()
+  },
+
+  // wx.showModal 的 Promise 封装（confirmDialog / promptAmount 共用）
+  showModal(options) {
     return new Promise((resolve) => {
       wx.showModal({
-        title,
-        content,
-        confirmColor: confirmColor || '#07c160',
-        success: (res) => resolve(res.confirm)
+        ...options,
+        success: resolve,
+        fail: () => resolve({ confirm: false })
       })
+    })
+  },
+
+  // 普通确认框
+  confirmDialog(title, content, confirmColor) {
+    return this.showModal({
+      title,
+      content,
+      confirmColor: confirmColor || '#07c160'
+    }).then(res => !!res.confirm)
+  },
+
+  // 带输入框的金额弹窗：取消 / 非法金额返回 null（不落库）
+  promptAmount(title, preset) {
+    return this.showModal({
+      title,
+      editable: true,
+      placeholderText: '请输入金额（元）',
+      content: preset || '',
+      confirmText: '确认'
+    }).then(res => {
+      if (!res.confirm) return null
+
+      const text = String(res.content === undefined ? '' : res.content).trim()
+      const amount = parseFloat(text)
+      if (!text || !Number.isFinite(amount) || amount <= 0) {
+        wx.showToast({ title: '请输入有效金额', icon: 'none' })
+        return null
+      }
+      return Math.round(amount * 100) / 100
     })
   }
 })

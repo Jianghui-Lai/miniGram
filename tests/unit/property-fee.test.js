@@ -260,11 +260,180 @@ describe('W系列：详情页物业费接线', () => {
 
   const wxml = fs.readFileSync(DETAIL_WXML, 'utf8')
 
-  test('W-01: 详情页绑定了 togglePropertyFee 且已实现', () => {
-    expect(wxml).toContain('bindtap="togglePropertyFee"')
+  test('W-01: 详情页绑定了 toggleFee 且按费用类型分发', () => {
+    expect(wxml).toContain('bindtap="toggleFee"')
+    expect(wxml).toContain('data-key="{{item.key}}"')
+    expect(wxml).toContain('wx:for="{{feeList}}"')
   })
 
   test('W-02: 编辑弹窗有物业费输入框', () => {
     expect(wxml).toContain('data-field="propertyFee"')
+  })
+})
+
+// ============================================
+// E系列：水费 / 电费（每月录入金额，没有房产级默认值）
+// ============================================
+describe('E系列：水费 / 电费状态', () => {
+
+  test('E-01: 房产上没有水费金额字段，恒为 0，但永远可点', () => {
+    expect(feeStatus.getMonthlyFee({ propertyFee: 200 }, 'water')).toBe(0)
+    expect(feeStatus.hasFee({ propertyFee: 200 }, 'water')).toBe(true)
+    expect(feeStatus.getStatusDetail({}, 2026, 10, 'water').tappable).toBe(true)
+  })
+
+  test('E-02: 当月没录入金额 → 未设置（占位留空，页面上不显示任何东西）', () => {
+    const detail = feeStatus.getStatusDetail({}, 2026, 10, 'water')
+    expect(detail.status).toBe('not_set')
+    expect(detail.needInput).toBe(true)
+    expect(detail.placeholder).toBe('')
+    expect(detail.dueAmount).toBe(0)
+    // 物业费没设金额时仍显示「未设置」
+    expect(feeStatus.getStatusDetail({}, 2026, 10, 'property').placeholder).toBe('未设置')
+  })
+
+  test('E-03: 录入当月金额后 → 未缴，且显示该金额', () => {
+    const unit = {
+      waterFeeHistory: [{ year: 2026, month: 10, status: 'unpaid', dueAmount: 58, amount: 0, date: null }]
+    }
+    const detail = feeStatus.getStatusDetail(unit, 2026, 10, 'water')
+    expect(detail.status).toBe('unpaid')
+    expect(detail.text).toBe('未缴')
+    expect(detail.dueAmount).toBe(58)
+    expect(detail.unitLabel).toBe('元')
+  })
+
+  test('E-04: 付款后 → 已缴，带实收金额与日期', () => {
+    const unit = {
+      waterFeeHistory: [{ year: 2026, month: 10, status: 'paid', dueAmount: 58, amount: 58, date: '2026-10-08' }]
+    }
+    const detail = feeStatus.getStatusDetail(unit, 2026, 10, 'water')
+    expect(detail.status).toBe('paid')
+    expect(detail.amount).toBe(58)
+    expect(detail.date).toBe('2026-10-08')
+  })
+
+  test('E-05: 撤销后回到未缴，且保留当月金额', async () => {
+    seedOne()
+    await propertyRepo.setMonthlyFee(1, 'water', 2026, 10, 58)
+    await propertyRepo.collectWaterFee(1, 2026, 10)
+    expect(feeStatus.getStatus(saved[0], 2026, 10, 'water')).toBe('paid')
+
+    expect(await propertyRepo.cancelWaterFee(1, 2026, 10)).toBe(true)
+    const detail = feeStatus.getStatusDetail(saved[0], 2026, 10, 'water')
+    expect(detail.status).toBe('unpaid') // 不是 not_set
+    expect(detail.dueAmount).toBe(58)    // 金额留着，直接再点就能重新付
+    expect(detail.amount).toBe(0)
+  })
+
+  test('E-06: 只认当月，其他月不影响本月', () => {
+    const unit = {
+      waterFeeHistory: [{ year: 2026, month: 9, status: 'paid', dueAmount: 58, amount: 58, date: '2026-09-08' }]
+    }
+    expect(feeStatus.getStatus(unit, 2026, 10, 'water')).toBe('not_set')
+    expect(feeStatus.getStatus(unit, 2026, 9, 'water')).toBe('paid')
+  })
+
+  test('E-07: setMonthlyFee 只写应收，不动缴纳状态', async () => {
+    seedOne()
+    expect(await propertyRepo.setMonthlyFee(1, 'electric', 2026, 10, 132.5)).toBe(true)
+    expect(feeStatus.getStatus(saved[0], 2026, 10, 'electric')).toBe('unpaid')
+    expect(feeStatus.getMonthlyDue(saved[0], 2026, 10, 'electric')).toBe(132.5)
+    expect(saved[0].electricFeeHistory[0].amount).toBe(0)
+  })
+
+  test('E-08: 老房产（无水电历史字段）也能录入与缴纳，不崩', async () => {
+    seedOne()
+    delete saved[0].waterFeeHistory
+    expect(await propertyRepo.setMonthlyFee(1, 'water', 2026, 10, 58)).toBe(true)
+    expect(await propertyRepo.collectWaterFee(1, 2026, 10)).toBe(true)
+    expect(feeStatus.getStatus(saved[0], 2026, 10, 'water')).toBe('paid')
+    expect(saved[0].waterFeeHistory).toHaveLength(1)
+  })
+
+  test('E-09: 电费读写：幂等 / 撤销后再缴 / 写失败返回 false', async () => {
+    seedOne()
+    await propertyRepo.collectElectricFee(1, 2026, 10, 132.5)
+    const firstDate = saved[0].electricFeeHistory[0].date
+    await propertyRepo.collectElectricFee(1, 2026, 10, 9999)
+    expect(saved[0].electricFeeHistory).toHaveLength(1)
+    expect(saved[0].electricFeeHistory[0].amount).toBe(132.5)
+    expect(saved[0].electricFeeHistory[0].date).toBe(firstDate)
+
+    await propertyRepo.cancelElectricFee(1, 2026, 10)
+    await propertyRepo.collectElectricFee(1, 2026, 10, 140)
+    expect(feeStatus.getStatus(saved[0], 2026, 10, 'electric')).toBe('paid')
+    expect(saved[0].electricFeeHistory).toHaveLength(1)
+
+    writeFails = true
+    expect(await propertyRepo.collectWaterFee(1, 2026, 10, 58)).toBe(false)
+  })
+
+  test('E-10: 房产不存在 / 无记录 → 返回 false', async () => {
+    seedOne()
+    expect(await propertyRepo.collectWaterFee(999, 2026, 10, 58)).toBe(false)
+    expect(await propertyRepo.cancelWaterFee(1, 2026, 10)).toBe(false)
+    expect(await propertyRepo.cancelElectricFee(1, 2026, 10)).toBe(false)
+  })
+
+  test('E-11: 三费互不干扰，也都不污染租金口径', async () => {
+    seedOne()
+    await propertyRepo.collectWaterFee(1, 2026, 10, 58)
+    await propertyRepo.collectElectricFee(1, 2026, 10, 132.5)
+
+    expect(saved[0].propertyFeeHistory).toEqual([])
+    expect(feeStatus.getStatus(saved[0], 2026, 10, 'water')).toBe('paid')
+    expect(feeStatus.getStatus(saved[0], 2026, 10, 'electric')).toBe('paid')
+    expect(feeStatus.getStatus(saved[0], 2026, 10, 'property')).toBe('unpaid')
+
+    await propertyRepo.cancelWaterFee(1, 2026, 10)
+    expect(feeStatus.getStatus(saved[0], 2026, 10, 'electric')).toBe('paid')
+
+    expect(saved[0].paymentHistory).toEqual([])
+    expect(propertyRepo.calcTotalReceived(saved[0])).toBe(0)
+  })
+
+  test('E-12: buildFeeList 一次给出三类费用，顺序固定', () => {
+    const list = feeStatus.buildFeeList({ propertyFee: 200 }, 2026, 10)
+    expect(list.map(f => f.key)).toEqual(['property', 'water', 'electric'])
+    expect(list[0].status).toBe('unpaid')
+    expect(list[1].needInput).toBe(true)
+    expect(list[2].needInput).toBe(true)
+  })
+
+  test('E-13: 未知类型一律当物业费，脏 key 不打穿页面', () => {
+    expect(feeStatus.getFeeDef('wat').key).toBe('property')
+  })
+})
+
+// ============================================
+// C系列：create / update 对水电历史的初始化与保护
+// ============================================
+describe('C系列：水电历史的初始化与保护', () => {
+
+  test('C-01: create 落两个空历史，且不落水电金额字段', async () => {
+    saved = null
+    const created = await propertyRepo.create({ address: 'A', monthlyRent: '3000', propertyFee: '200' })
+    expect(created.waterFeeHistory).toEqual([])
+    expect(created.electricFeeHistory).toEqual([])
+    expect(created.waterFee).toBe(undefined)
+    expect(created.electricFee).toBe(undefined)
+  })
+
+  test('C-02: 编辑冲不掉水电历史', async () => {
+    seedOne()
+    await propertyRepo.collectWaterFee(1, 2026, 10, 58)
+    await propertyRepo.collectElectricFee(1, 2026, 10, 132.5)
+
+    const ok = await propertyRepo.update(1, {
+      address: '阳光小区 3-101',
+      monthlyRent: '3000',
+      waterFeeHistory: [],
+      electricFeeHistory: []
+    })
+    expect(ok).toBe(true)
+    expect(saved[0].waterFeeHistory).toHaveLength(1)
+    expect(saved[0].electricFeeHistory).toHaveLength(1)
+    expect(feeStatus.getStatus(saved[0], 2026, 10, 'water')).toBe('paid')
   })
 })

@@ -95,6 +95,11 @@
   color: #ff9800;
 }
 
+/* 未设置 / 待录入：可点，点了去录入当月金额 */
+.fee-status.not_set {
+  color: #999999;
+}
+
 .total-received {
   display: flex;
   justify-content: space-between;

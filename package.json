@@ -11,5 +11,8 @@
   "license": "ISC",
   "devDependencies": {
     "jest": "^30.3.0"
+  },
+  "dependencies": {
+    "@babel/runtime": "^8.0.7"
   }
 }
